@@ -9,7 +9,7 @@ void StackAllocator::internal_destroy()
 {
 	if(data)
 		free(data);
-	n = 0;
+	
 	data = nullptr;
 }
 
@@ -19,10 +19,10 @@ bool StackAllocator::internal_init(uint size_in_bytes)
 	data = malloc(size_in_bytes);
 	if(!data)
 		return false;
-	n = 0;
+	
 	marker  = (uint32_t)data;
 	size	= size_in_bytes;
-
+	end		= (uint32_t)marker + size;
 	//top = new((void*)((uint32_t)(data)+size-sizeof(Marker)))Marker;
 	//top->address = marker;
 

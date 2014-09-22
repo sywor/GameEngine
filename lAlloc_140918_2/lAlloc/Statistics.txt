@@ -2141,3 +2141,147 @@ T2: Total dealloc time: 0.022811 sec
 T2: Avg alloc time:     15.65 ms 
 T2: Avg dealloc time:   24.267 ms 
 
+PoolAllocator
+Total run time: 6.10225
+T1: Total allocs:       128
+T1: Total alloc time:   0.000215 sec
+T1: Total dealloc time: 6.10123 sec
+T1: Avg alloc time:     1.67969 ms 
+T1: Avg dealloc time:   47665.9 ms 
+
+PoolAllocator
+Total run time: 6.10225
+T2: Total allocs:       128
+T2: Total alloc time:   0.000398 sec
+T2: Total dealloc time: 0.000347 sec
+T2: Avg alloc time:     3.10938 ms 
+T2: Avg dealloc time:   2.71094 ms 
+
+PoolAllocator
+Total run time: 0.001088
+T1: Total allocs:       128
+T1: Total alloc time:   0.000217 sec
+T1: Total dealloc time: 0.0001 sec
+T1: Avg alloc time:     1.69531 ms 
+T1: Avg dealloc time:   0.78125 ms 
+
+PoolAllocator
+Total run time: 0.001088
+T2: Total allocs:       128
+T2: Total alloc time:   0.00039 sec
+T2: Total dealloc time: 0.000349 sec
+T2: Avg alloc time:     3.04688 ms 
+T2: Avg dealloc time:   2.72656 ms 
+
+PoolAllocator
+Total run time: 4.93566
+T1: Total allocs:       1280000
+T1: Total alloc time:   0.743399 sec
+T1: Total dealloc time: 0.567919 sec
+T1: Avg alloc time:     0.58078 ms 
+T1: Avg dealloc time:   0.443687 ms 
+
+PoolAllocator
+Total run time: 4.93566
+T2: Total allocs:       1280000
+T2: Total alloc time:   1.74632 sec
+T2: Total dealloc time: 1.85479 sec
+T2: Avg alloc time:     1.36431 ms 
+T2: Avg dealloc time:   1.44905 ms 
+
+PoolAllocator
+Total run time: 1.78523
+T1: Total allocs:       1280000
+T1: Total alloc time:   3.3e-005 sec
+T1: Total dealloc time: 1e-006 sec
+T1: Avg alloc time:     2.57812e-005 ms 
+T1: Avg dealloc time:   7.8125e-007 ms 
+
+PoolAllocator
+Total run time: 1.78523
+T2: Total allocs:       1280000
+T2: Total alloc time:   0.899597 sec
+T2: Total dealloc time: 0.864519 sec
+T2: Avg alloc time:     0.70281 ms 
+T2: Avg dealloc time:   0.675405 ms 
+
+PoolAllocator
+Total run time: 1.79323
+T1: Total allocs:       1280000
+T1: Total alloc time:   1.9e-005 sec
+T1: Total dealloc time: 3e-006 sec
+T1: Avg alloc time:     1.48438e-005 ms 
+T1: Avg dealloc time:   2.34375e-006 ms 
+
+PoolAllocator
+Total run time: 1.79323
+T2: Total allocs:       1280000
+T2: Total alloc time:   0.901262 sec
+T2: Total dealloc time: 0.871131 sec
+T2: Avg alloc time:     0.704111 ms 
+T2: Avg dealloc time:   0.680571 ms 
+
+PoolAllocator
+Total run time: 17.8562
+T1: Total allocs:       12800000
+T1: Total alloc time:   0.026348 sec
+T1: Total dealloc time: 7.8e-005 sec
+T1: Avg alloc time:     0.00205844 ms 
+T1: Avg dealloc time:   6.09375e-006 ms 
+
+PoolAllocator
+Total run time: 17.8562
+T2: Total allocs:       12800000
+T2: Total alloc time:   8.94151 sec
+T2: Total dealloc time: 8.6387 sec
+T2: Avg alloc time:     0.698555 ms 
+T2: Avg dealloc time:   0.674899 ms 
+
+PoolAllocator
+Total run time: 1.78387
+T1: Total allocs:       1280000
+T1: Total alloc time:   5.1e-005 sec
+T1: Total dealloc time: 0 sec
+T1: Avg alloc time:     3.98438e-005 ms 
+T1: Avg dealloc time:   0 ms 
+
+PoolAllocator
+Total run time: 1.78387
+T2: Total allocs:       1280000
+T2: Total alloc time:   0.894704 sec
+T2: Total dealloc time: 0.863512 sec
+T2: Avg alloc time:     0.698987 ms 
+T2: Avg dealloc time:   0.674619 ms 
+
+PoolAllocator
+Total run time: 1.81113
+T1: Total allocs:       1280000
+T1: Total alloc time:   2.6e-005 sec
+T1: Total dealloc time: 0 sec
+T1: Avg alloc time:     2.03125e-005 ms 
+T1: Avg dealloc time:   0 ms 
+
+PoolAllocator
+Total run time: 1.81113
+T2: Total allocs:       1280000
+T2: Total alloc time:   0.910665 sec
+T2: Total dealloc time: 0.876105 sec
+T2: Avg alloc time:     0.711457 ms 
+T2: Avg dealloc time:   0.684457 ms 
+
+PoolAllocator
+Total run time: 1.7965
+T1: Total allocs:       1280000
+T1: Total alloc time:   0.001136 sec
+T1: Total dealloc time: 1e-006 sec
+T1: Avg alloc time:     0.0008875 ms 
+T1: Avg dealloc time:   7.8125e-007 ms 
+
+PoolAllocator
+Total run time: 1.7965
+T2: Total allocs:       1280000
+T2: Total alloc time:   0.898623 sec
+T2: Total dealloc time: 0.8735 sec
+T2: Avg alloc time:     0.702049 ms 
+T2: Avg dealloc time:   0.682422 ms 
+

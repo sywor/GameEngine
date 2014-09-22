@@ -20,7 +20,9 @@ class StackAllocator
 {
 private:
 	int32_t		marker;
+	uint32_t	end;
 	//Marker*		top;
+
 	int n;
 protected:
 	virtual void	internal_deallocate(void* mem = nullptr)					override;
@@ -36,16 +38,13 @@ public:
 	T* allocate(S... args)
 	{ 
 #ifdef _DEBUG
-		assert((marker + sizeof(T)) <= (reinterpret_cast<uint32_t>(data)+size));
-#else
-		uint32_t dat = (uint32_t)data + size;
-		if (marker > (reinterpret_cast<uint32_t>(data) + size))
-			return nullptr;
+		assert((marker + sizeof(T)) <= end);
 #endif
-		n++;
-		void* mem = (void*)marker;
-		marker = marker + sizeof(T);
-		return static_cast<T*>(new(mem)T(args...));
+		uint32_t dat = (uint32_t)data + size;
+		if ((marker + sizeof(T)) > end)
+			return nullptr;
+
+		return reinterpret_cast<T*>(new(FlatAllocate(sizeof(T)))T(args...));
 	}
 
 	template<typename T>
@@ -53,12 +52,11 @@ public:
 	{
 		uint32_t objAddr = (uint32_t)obj;
 
-		// the object we're trying to remove is beyond the marker
-		if(objAddr > (marker - sizeof(T)))	
-			return;
-		n--;
+		// the object we're trying to remove is not the head
+		assert((uint32_t)obj == (marker)-sizeof(T));
+		
 		obj->~T();
-		obj		= nullptr;
+		obj	= nullptr;
 		marker	= objAddr;
 	}
 

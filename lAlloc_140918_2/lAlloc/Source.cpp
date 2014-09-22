@@ -195,18 +195,18 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	/* --- POOL TESTS --- */
 	//doAllocByThePool(&allocationManagers1.at(0), i);
-	std::thread q(doAllocByThePool, &allocationManagers1.at(0), i);
-	std::thread p(doAllocByThePool, &allocationManagers2.at(0), i);
-	q.join();
-	p.join();
+	//std::thread q(doAllocByThePool, &allocationManagers1.at(0), i);
+	//std::thread p(doAllocByThePool, &allocationManagers2.at(0), i);
+	//q.join();
+	//p.join();
 	/* --- /POOL TESTS ---*/
 
 	/* --- STACK TESTS --- */
 	/* NO THREADS */
 	//stackScen1<StackAllocator>(&allocationManagers1.at(0), i);
 	//stackScen1<DefaultAllocator>(&allocationManagers2.at(0), i);
-	//stackScen2<StackAllocator, bigFunc>(&allocationManagers1.at(0), i);
-	//stackScen2<DefaultAllocator, bigFunc>(&allocationManagers2.at(0), i);
+	stackScen2<StackAllocator, funky2>(&allocationManagers1.at(0), i);
+	stackScen2<DefaultAllocator, funky2>(&allocationManagers2.at(0), i);
 	/* /NO THREADS */
 
 	/* MULTI THREADS */
