@@ -69,9 +69,9 @@ public:
 
 	void* FlatAllocate(uint size_in_bytes, uint alignment = 2)
 	{
-		ENTER_CRITICAL_SECTION;
+		//ENTER_CRITICAL_SECTION;
 		void* temp = internal_allocate( size_in_bytes, alignment );
-		EXIT_CRITICAL_SECTION;
+		//EXIT_CRITICAL_SECTION;
 		return temp;
 	}
 	

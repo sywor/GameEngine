@@ -68,6 +68,7 @@
     <ClCompile Include="PoolAllocator.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="StackAllocator.cpp" />
+    <ClCompile Include="Tests.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -76,6 +77,8 @@
     <ClInclude Include="DefaultAllocator.h" />
     <ClInclude Include="PoolAllocator.h" />
     <ClInclude Include="StackAllocator.h" />
+    <ClInclude Include="TestDataStructs.h" />
+    <ClInclude Include="Tests.h" />
     <ClInclude Include="Timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

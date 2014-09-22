@@ -20,8 +20,8 @@ class StackAllocator
 {
 private:
 	int32_t		marker;
-	Marker*		top;
-
+	//Marker*		top;
+	int n;
 protected:
 	virtual void	internal_deallocate(void* mem = nullptr)					override;
 public:
@@ -35,39 +35,34 @@ public:
 	template<typename T, typename... S>
 	T* allocate(S... args)
 	{ 
-		assert(marker + sizeof(T) <= (uint32_t)top);
-
-		// the header object
-		// constructed first since we need to store address for previous object
-		top					= new(top-sizeof(Marker))Marker;
-		top->address		= marker;
-		top->destructorCall = &CallDestructor<T>;
-
-		// the allocated object
-		// increases marker by size of object
-		T* object = reinterpret_cast<T*>(new(FlatAllocate(sizeof(T)))T(args...));
-
-		return object;
+#ifdef _DEBUG
+		assert((marker + sizeof(T)) <= (reinterpret_cast<uint32_t>(data)+size));
+#else
+		uint32_t dat = (uint32_t)data + size;
+		if (marker > (reinterpret_cast<uint32_t>(data) + size))
+			return nullptr;
+#endif
+		n++;
+		void* mem = (void*)marker;
+		marker = marker + sizeof(T);
+		return static_cast<T*>(new(mem)T(args...));
 	}
 
 	template<typename T>
 	void deallocate(T*& obj)
 	{
-		uint32_t objAddr = marker - sizeof(T);
+		uint32_t objAddr = (uint32_t)obj;
 
-		assert(objAddr == (uint32_t)obj);
-		assert(objAddr <= ((uint32_t)data + size) );
-		assert((uint32_t)data <= objAddr);
-		
+		// the object we're trying to remove is beyond the marker
+		if(objAddr > (marker - sizeof(T)))	
+			return;
+		n--;
 		obj->~T();
 		obj		= nullptr;
 		marker	= objAddr;
-
-		sizeAllocations -= sizeof(T);
-		//numAllocations--;
 	}
 
-	void		pop();
-	int32_t		getMarker();
+	void		setMarker(const uint32_t &_marker) { marker = _marker; }
+	uint32_t	getMarker();
 	void		clear();
 };
