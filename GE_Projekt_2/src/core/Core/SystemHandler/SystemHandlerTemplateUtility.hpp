@@ -25,7 +25,7 @@ struct Implsd<>
 {
   static void DeleteSystemsTemplateRecursion( int* systemArray )
   {   
-  }
+  } 
 };
 
 template <typename... Args>
@@ -45,7 +45,7 @@ struct Impls<First, Args...>
 {
 	static void UpdateSystemsTemplateRecursion( int* systemArray, float dt, float realTime )
 	{
-		((First*)systemArray[ sizeof...(Args) ])->Update( dt, realTime );
+		static_cast<First*>(systemArray[sizeof...(Args)])->Update(dt, realTime);
 
 		Impls< Args... >::UpdateSystemsTemplateRecursion( systemArray, dt, realTime );
 	}

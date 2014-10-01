@@ -6,17 +6,17 @@
 #include <type_traits>
 #include <string>
 
-#include "Memory/Allocation.h"
-#include "Memory/StackAllocator.h"
+#include <Core/Memory/Allocation.h>
+#include <Core/Memory/StackAllocator.h>
 
-#include "Memory/PoolAllocator.h"
-#include "Memory/DefaultAllocator.h"
+#include <Core/Memory/PoolAllocator.h>
+#include <Core/Memory/DefaultAllocator.h>
 
 #include <thread>
-#include "Utility/Timer.h"
+#include <Core/Memory/Timer.h>
 
 #include <new>
-#include "Memory/Tests.h"
+#include <Core/Memory/Tests.h>
 
 
 
@@ -261,13 +261,13 @@
 //	return 0;
 //}
 
-#include "ContentManager/ResourceManager.hpp"
-#include "ContentManager/ResourceLoader.hpp"
-#include "ContentManager/Resource.hpp"
-#include "ContentManager/Loaders/TestLoader.hpp"
+#include <Core/ContentHandler/ResourceManager.hpp>
+#include <Core/ContentHandler/ResourceLoader.hpp>
+#include <Core/ContentHandler/Resource.hpp>
+#include <Core/ContentHandler/Loaders/TestLoader.hpp>
 
-typedef bro::TestLoader TempLoader;
-typedef bro::ResourceManager< TempLoader, TempLoader > ExampleHandler;
+typedef trr::TestLoader TempLoader;
+typedef trr::ResourceManager< TempLoader, TempLoader > ExampleHandler;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
