@@ -50,8 +50,9 @@
 
 #include "ZipHandler.hpp"
 
-#include <zlib.h>
+#include <zlib/zlib.h>
 #include <string.h>
+#include <cassert>
 
 
 // --------------------------------------------------------------------------
@@ -150,7 +151,7 @@ bool ZipFile::Init(const std::wstring &resFileName)
 {
 	End();
 
-	_wfopen_s(&m_pFile, resFileName.c_str(), _T("rb"));
+	_wfopen_s(&m_pFile, resFileName.c_str(), L"rb");
 	if (!m_pFile)
 		return false;
 
@@ -436,7 +437,7 @@ bool ZipFile::ReadLargeFile(int i, void *pBuf, void(*progressCallback)(int, bool
 			}
 			else if (err != Z_OK)
 			{
-				GCC_ASSERT(0 && "Something happened.");
+				assert(0 && "Something happened.");
 				break;
 			}
 
