@@ -65,14 +65,14 @@ void doAllocByThePool(AllocationManager *settings, int _framesToRun)
 
 
 
-		for (int i = 0; i < list.size(); ++i)
+		for (unsigned int i = 0; i < list.size(); ++i)
 		{
 			list[i]->doFunc();
 		}
 
 		settings->deallocationTimer.start();
 
-		for (int i = 0; i < list.size();)
+		for (unsigned int i = 0; i < list.size();)
 		{
 			if (list[i]->lifeTime <= 0)
 			{
@@ -117,14 +117,14 @@ void doAllocByThePool(AllocationManager *settings, int _framesToRun)
 
 	while (list.size() > 0)
 	{
-		for (int i = 0; i < list.size(); ++i)
+		for (unsigned int i = 0; i < list.size(); ++i)
 		{
 			list[i]->doFunc();
 		}
 
 		settings->deallocationTimer.start();
 
-		for (int i = 0; i < list.size();)
+		for (unsigned int i = 0; i < list.size();)
 		{
 			if (list[i]->lifeTime <= 0)
 			{

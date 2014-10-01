@@ -17,7 +17,7 @@ bool PoolAllocator::internal_init( uint32_t size_in_bytes )
 	return true;
 }
 
-void PoolAllocator::checkMerge(int i)
+void PoolAllocator::checkMerge(unsigned int i)
 {
 	auto& list( openList );
 	if( i + 1 > list.size() )
@@ -120,7 +120,7 @@ int PoolAllocator::insertOpenList( MemIndex t )
 #endif
 
 #ifdef OLD_CODE
-	for( int i(0); i < list.size(); i++ )
+	for (unsigned int i(0); i < list.size(); i++)
 	{
 		if( list[i].size >= t.size )
 		{
@@ -161,7 +161,7 @@ int PoolAllocator::insertClosedList( MemIndex t )
 	return closedList.size() - 1;
 }
 
-void* PoolAllocator::closeMemory( int i, uint size_in_bytes )
+void* PoolAllocator::closeMemory(unsigned int i, uint size_in_bytes)
 {
 	if( openList[i].size / 2 < size_in_bytes || openList[i].size / 2 < block_size )
 	{
@@ -202,7 +202,7 @@ void* PoolAllocator::internal_allocate( uint size_in_bytes, uint alignement )
 
 void PoolAllocator::internal_deallocate( void* mem )
 {
-	for( int i(0); i < closedList.size(); i++ )
+	for (unsigned int i(0); i < closedList.size(); i++)
 	{
 		if( closedList[i].memory == mem )
 		{

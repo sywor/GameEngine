@@ -34,10 +34,10 @@ struct AllocationManager
 
 	// statistics
 	int NrOfAlocations;
-	float TotalAllocationTime;
-	float AvarageAllocationTime;
-	float TotalDeallocationTime;
-	float AvarageDeallocationTime;
+	double TotalAllocationTime;
+	double AvarageAllocationTime;
+	double TotalDeallocationTime;
+	double AvarageDeallocationTime;
 	Timer allocationTimer;
 	Timer deallocationTimer;
 

@@ -23,10 +23,10 @@ private:
 
 
 protected:
-	void checkMerge( int i );
+	void checkMerge(unsigned int i);
 	int insertOpenList( MemIndex t );
 	int insertClosedList( MemIndex t );
-	void* closeMemory( int i, uint size_in_bytes );
+	void* closeMemory(unsigned int i, uint size_in_bytes);
 
 	virtual bool	internal_init(uint32_t size_in_bytes)						override;
 	virtual void*	internal_allocate(uint size_in_bytes, uint alignement = 2)	override;
