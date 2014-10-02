@@ -4,20 +4,15 @@
 #include <Core/EntityHandler/EntityHandler.hpp>
 
 /* Include component header here */
+#include <Components/TransformationComponent.hpp>
 
-
-namespace trr
-{
-	typedef EntityHandler<
+	typedef trr::EntityHandler<
 	
 	/* List components here */
-	
-	int,
-	float
+	trr::TransformationComponent
 	
 	
 	> EntityHandlerImp;
-}
 
 
 #endif

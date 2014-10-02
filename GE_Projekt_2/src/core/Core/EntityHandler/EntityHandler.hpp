@@ -143,7 +143,7 @@ namespace trr
 			std::array< int, sizeof...( maskComponentList ) > temp = 
 				{{ (ArrayIndex< maskComponentList, std::tuple< components... >>::index)... }};
 			for( int i = 0; i < sizeof...( maskComponentList ); ++i )
-				mask |= 1 << temp[ i ];
+				mask |= (1 << i) * ( temp[ i ] != -1 );
 			return mask;
 		}
 
