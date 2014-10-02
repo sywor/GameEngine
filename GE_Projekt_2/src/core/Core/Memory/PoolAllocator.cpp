@@ -163,7 +163,7 @@ int PoolAllocator::insertClosedList( MemIndex t )
 
 void* PoolAllocator::closeMemory(unsigned int i, uint size_in_bytes)
 {
-	if( openList[i].size / 2 < size_in_bytes || openList[i].size / 2 < block_size )
+	if (openList[i].size / 2 < size_in_bytes || openList[i].size / 2 < block_size)
 	{
 		void* t = openList[i].memory;
 		insertClosedList( openList[i] );
