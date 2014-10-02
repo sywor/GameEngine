@@ -11,4 +11,9 @@ namespace utilities
 		std::cout << "Press \"the\" any key twice to close the program" << std::endl;
 		std::cin.get();		
 	}
+
+	void print(std::string _msg)
+	{
+		std::cout << _msg.c_str() << std::endl;
+	}
 }
