@@ -9,7 +9,7 @@ namespace trr
 		: public ResourceLoader
 	{
 	private:
-		bool internal_Load(std::string path, Resource& r) final;
+		bool internal_Load(std::string path, Resource& r, DataContainer _data) final;
 		void internal_unload(Resource& r) final;
 		const std::string GetExtension() final { return "*"; }
 	protected:

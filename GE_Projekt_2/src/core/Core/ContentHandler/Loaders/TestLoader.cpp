@@ -13,8 +13,10 @@ namespace trr
 	{
 	}
 
-	bool TestLoader::internal_Load(std::string path, Resource& r)
+	bool TestLoader::internal_Load(std::string path, Resource& r, DataContainer _data)
 	{
+		char* test = _data.data;
+
 		return false;
 	}
 

@@ -19,7 +19,7 @@ class ZipFile
 {
 public:
 	ZipFile() { m_nEntries = 0; m_pFile = NULL; m_pDirData = NULL; }
-	virtual ~ZipFile() { End(); fclose(m_pFile); }
+	virtual ~ZipFile() { End(); if(m_pFile)fclose(m_pFile); }
 
 	bool Init(const std::wstring &resFileName);
 	void End();

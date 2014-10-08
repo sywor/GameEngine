@@ -4,32 +4,15 @@
 namespace trr
 {
 
-	bool RawDataLoader::internal_Load(std::string path, Resource& r)
+	bool RawDataLoader::internal_Load(std::string path, Resource& r, DataContainer _data)
 	{
-		std::fstream stream(path, std::ios::in);
-
-		// file not found
-		if (!stream)
-		{
+		if (_data.data == nullptr)
 			return false;
-		}
+
+		r.data = m_pAllocator->allocate<char>(_data.size);
 		
-		// get length of file
-		stream.seekg(0, std::ios::end);
-		std::streamsize size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-
-		// this is not allocated properly!
-		r.data = new char[size+1];
-		((char*)r.data)[size] = 0;
-
-		// unable to read file to buffer
-		if (!stream.read(static_cast<char*>(r.data), size))
-		{
+		if (r.data == nullptr)
 			return false;
-		}
-
-		stream.close();
 
 		return true;
 	}
@@ -38,8 +21,7 @@ namespace trr
 	{
 		if (r.data)
 		{
-			printf("%s\n", (char*)r.data);
-			delete [] r.data;
+			m_pAllocator->deallocate(r.data);
 			r.data = nullptr;
 		}
 	}

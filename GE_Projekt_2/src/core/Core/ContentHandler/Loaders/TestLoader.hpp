@@ -11,7 +11,7 @@ namespace trr
 	{
 	private:
 
-		virtual bool internal_Load(std::string path, Resource& r)	override;
+		virtual bool internal_Load(std::string path, Resource& r, DataContainer _data)	override;
 		virtual void internal_unload(Resource& r)					override;
 
 	public:
@@ -21,7 +21,6 @@ namespace trr
 
 	private:
 
-		int testarray[500];
 		const std::string GetExtension() final { return "test"; }
 
 	};
