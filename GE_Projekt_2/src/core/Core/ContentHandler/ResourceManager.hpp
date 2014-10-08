@@ -13,7 +13,35 @@
 #include <string>
 #include <functional>
 
+static bool MatchExtension(const char* fExt, const char *lExt)
+{
+	while (*lExt)
+	{
+		if (*lExt == ('?'))
+		{
+			if (!*fExt)
+				return false;
 
+			++fExt;
+			++lExt;
+		}
+		else if (*lExt == ('*'))	// Wildcard bitches!
+		{
+			if (MatchExtension(fExt, lExt + 1))
+				return true;
+			if (*fExt && MatchExtension(fExt + 1, lExt))
+				return true;
+
+			return false;
+		}
+		else
+		{
+			if (::CharUpper(MAKEINTRESOURCE(MAKELONG(*fExt++, 0))) != ::CharUpper(MAKEINTRESOURCE(MAKELONG(lExt++, 0))))
+				return false;
+		}
+	}
+	return !*fExt && !*lExt;
+}
 
 namespace trr
 {
@@ -54,7 +82,45 @@ namespace trr
 			Attempts to load asset and returns void* to 
 			respective result container associated with the sought loader.
 		*/
-		void* GetResource( std::string path );
+		void* GetResource(std::string path)
+		{
+			// implement proper hash!!!
+			int hash = std::atoi(path.c_str());
+
+			// return asset if already loaded
+			for (Resource& asset : assetList)
+			{
+				if (asset.hash == hash)
+				{
+					asset.nrReferences++;
+					return asset.data;
+				}
+			}
+			
+			// find compatible loader to new resource
+			std::size_t sep = path.find_last_of(".");
+			const std::string ext = path.substr(sep+1);
+			for (int i = 0; i < loaders.size(); ++i)
+			{
+				if (MatchExtension(ext.c_str(), loaders[i]->GetExtension().c_str()))
+				{
+					Resource r;
+					r.hash = hash;
+					r.nrReferences++;
+					r.loaderIndex = i;
+					loaders[i]->Load(path, r);
+					
+					assetList.push_back(r);
+
+					break;
+				}
+			}
+			// debug only, fix!!!
+
+			if (assetList.size() > 0)
+				return assetList[0].data;
+			else return nullptr;
+		}
 
 		/*
 			Attempts to load asset and call the supplied function once loaded.
@@ -66,7 +132,19 @@ namespace trr
 			Will decrease the referense counter of the supplied hash
 			and add job to unload should the number of referenses reach zero.
 		*/
-		void Unload( std::uint64_t handle );
+		void Unload(std::uint64_t handle)
+		{
+			for (Resource& asset : assetList)	// find resource
+			{
+				if (asset.hash == handle)
+				{
+					if (asset.loaderIndex < loaders.size())	// find associated unloader
+					{
+						loaders[asset.loaderIndex]->Unload(asset);
+					}
+				}
+			}
+		}
 
 
 		/*

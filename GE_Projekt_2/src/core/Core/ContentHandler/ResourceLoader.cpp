@@ -10,13 +10,18 @@ namespace trr
 	}
 
 
-	void Load( std::string path, std::uint64_t hash )
+	bool ResourceLoader::Load(std::string path, Resource& r)
 	{
+		// thread protection?
+		return internal_Load(path, r);
 	}
 
 		
-	void Unload( std::uint64_t hash )
+	void ResourceLoader::Unload(Resource& r)
 	{
+		// thread protection?
+		if (--r.nrReferences == 0)
+			internal_unload(r);
 	}
 
 

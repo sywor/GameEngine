@@ -5,15 +5,15 @@
 
 /* Include headers for loaders here */
 #include <Core/ContentHandler/Loaders/TestLoader.hpp>
-
+#include <Core\ContentHandler\Loaders\RawDataLoader.hpp>
 namespace trr
 {
 	typedef ResourceManager<
 	
 		/* List loader classes here */
 
-		TestLoader
-
+		TestLoader,
+		RawDataLoader		// raw char buffer
 
 
 	

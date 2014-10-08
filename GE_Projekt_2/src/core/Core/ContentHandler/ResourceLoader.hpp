@@ -13,8 +13,8 @@ namespace trr
 	{
 	private:
 
-		virtual void internal_Load( std::string path, std::uint64_t hash )	= 0;
-		virtual void internal_unload( std::uint64_t hash )					= 0;
+		virtual bool internal_Load(std::string path, Resource& r) = 0;
+		virtual void internal_unload(Resource& r) = 0;
 
 	public:
 		virtual ~ResourceLoader();
@@ -24,15 +24,21 @@ namespace trr
 			Will check hash reference count before and after loading 
 			in order to counter chained loading and unloading.
 		*/
-		void Load( std::string path, std::uint64_t hash );
+		bool Load(std::string path, Resource& r);
 
 		/*
 			Loopthrough function for the asynchronous interface.
 			Will check hash reference count before and after loading 
 			in order to counter chained loading and unloading.
 		*/
-		void Unload( std::uint64_t hash );
+		void Unload(Resource& r);
 
+		/*
+			Get the file extension associated with a particular
+			resource loader. Used for matching a type of resource
+			with a loader.
+		*/
+		virtual const std::string GetExtension() = 0;
 
 	private:
 

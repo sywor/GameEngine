@@ -11,8 +11,8 @@ namespace trr
 	{
 	private:
 
-		virtual void internal_Load( std::string path, std::uint64_t hash )	override;
-		virtual void internal_unload( std::uint64_t hash )					override;
+		virtual bool internal_Load(std::string path, Resource& r)	override;
+		virtual void internal_unload(Resource& r)					override;
 
 	public:
 		TestLoader();
@@ -22,7 +22,7 @@ namespace trr
 	private:
 
 		int testarray[500];
-
+		const std::string GetExtension() final { return "test"; }
 
 	};
 
