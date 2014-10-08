@@ -43,7 +43,24 @@ struct cbWorld
 };
 
 
+struct Vertex
+{
+	D3DXVECTOR4 pos;
+	D3DXVECTOR4 normal;
+	D3DXVECTOR2 texC;
 
+	Vertex() : normal(D3DXVECTOR3(0, 0, 0))
+	{
+	}
+
+	Vertex(D3DXVECTOR3 p, D3DXVECTOR3 n) : pos(p), normal(n)
+	{
+	}
+
+	Vertex(D3DXVECTOR3 p, D3DXVECTOR2 t, D3DXVECTOR3 n) : pos(p), normal(n), texC(t)
+	{
+	}
+};
 
 
 

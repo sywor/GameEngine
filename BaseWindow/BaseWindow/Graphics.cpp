@@ -8,6 +8,59 @@ Graphics::Graphics()
 	createShader("PixelShader", "ps_5_0");
 	createSampler();
 	createBuffers();
+	createRasterState();
+
+
+	//------------------------------ temp variables for testing
+
+	object = new Object();
+	loader = new Loader();
+
+	loader->LoadObject("Bunker.obj",0,0,0,1,object,1,1,1);
+
+	object->InitBuffers("purple.jpg","cracked.jpg");
+
+	for (int i = 0; i < 6; i++)
+	{
+		wall[i].normal = D3DXVECTOR4(0, 0, -1, 0);
+		wall[i].texC = D3DXVECTOR2(0, 0);
+	}
+
+	wall[0].pos = D3DXVECTOR4(20, 20, 20, 1);
+	wall[1].pos = D3DXVECTOR4(20, -20, 20, 1);
+	wall[2].pos = D3DXVECTOR4(-20, -20, 20, 1);
+	wall[3].pos = D3DXVECTOR4(20, 20, 20, 1);
+	wall[4].pos = D3DXVECTOR4(-20, -20, 20, 1);
+	wall[5].pos = D3DXVECTOR4(-20, 20, 20, 1);
+
+
+
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.ByteWidth = sizeof(Vertex) * 6;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	HRESULT result = S_OK;
+	result = g_Device->CreateBuffer(&bufferDesc, NULL, &g_vertexBuffer);
+	if (FAILED(result))
+	{
+		MessageBox(NULL, "Error creating dynamic vertex buffer", "RenderDX11 Error", S_OK);
+	}
+
+
+	D3D11_MAPPED_SUBRESOURCE updateData;
+	ZeroMemory(&updateData, sizeof(updateData));
+
+	if (!FAILED(g_DeviceContext->Map(g_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
+		memcpy(updateData.pData, &wall[0], sizeof(Vertex)* 6);
+
+	g_DeviceContext->Unmap(g_vertexBuffer, 0);
+
+
+	//------------------------------
+
 }
 
 
@@ -34,10 +87,26 @@ HRESULT Graphics::Render(float _deltaTime)
 {
 	//D3DXCOLOR color = D3DXCOLOR(Cam->getCameraPosition().x, Cam->getCameraPosition().y, Cam->getCameraPosition().z,0);
 
-	g_DeviceContext->ClearRenderTargetView(g_backBuffer, D3DXCOLOR(1.0f, 0.6f, 0.6f, 0));
+	g_DeviceContext->ClearRenderTargetView(g_backBuffer, D3DXCOLOR(0.0f, 0.0f, 0.0f, 0));
 
-	//g_DeviceContext->IASetVertexBuffers();
-	//g_DeviceContext->Draw(,0);
+	g_DeviceContext->IASetInputLayout(g_vertexLayout);
+
+	g_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	g_DeviceContext->RSSetState(rasterState);
+
+	UINT strides = sizeof(Vertex);
+	UINT offset = 0;
+
+	
+
+	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
+	g_DeviceContext->Draw(6,0);
+
+	//g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
+	//g_DeviceContext->Draw(10,0);
+
+
 
 	// Presenting swapchain
 	if (FAILED(g_SwapChain->Present(0, 0)))
@@ -218,7 +287,7 @@ void Graphics::createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layo
 		MessageBox(NULL, text.c_str(), "Shader Error", MB_OK);
 		PostQuitMessage(0);
 	}
-
+	g_vertexLayout = _layout;
 	vertexShaderReflection->Release();
 }
 
@@ -272,4 +341,32 @@ void Graphics::createBuffers()
 	g_DeviceContext->VSSetConstantBuffers(0, 1, &g_cbWorld);
 	g_DeviceContext->GSSetConstantBuffers(0, 1, &g_cbWorld);
 	g_DeviceContext->PSSetConstantBuffers(0, 1, &g_cbWorld);
+}
+
+void Graphics::createRasterState()
+{
+
+	HRESULT result = S_OK;
+
+	D3D11_RASTERIZER_DESC rasterDesc;
+
+	// Setup the raster description which will determinatie how and what polygons will be drawn.
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	// Create the rasterizer state from the description we just filled out.
+	result = g_Device->CreateRasterizerState(&rasterDesc, &rasterState);
+	if (FAILED(result))
+	{
+		MessageBox(NULL, "Failed Making Constant Buffer", "Create Buffer", MB_OK);
+
+	}
 }

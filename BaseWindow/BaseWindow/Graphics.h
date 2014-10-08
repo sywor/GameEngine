@@ -2,6 +2,14 @@
 #include "stdafx.h"
 #include "Camera.h"
 
+//--------------------------------- temp includes for testing
+
+#include "Object.h"
+#include "Loader.h"
+
+//---------------------------------
+
+
 extern ID3D11Device* g_Device;
 extern ID3D11DeviceContext* g_DeviceContext;
 extern IDXGISwapChain* g_SwapChain;
@@ -16,6 +24,16 @@ public:
 	HRESULT Update(float _deltaTime);
 	HRESULT Render(float _deltaTime);
 
+
+	//---------------------------------- temporary variables for testing
+
+	Loader* loader;
+	Object* object;
+
+	Vertex wall[6];
+
+	//----------------------------------
+
 private:
 
 	void createBackBuffer();
@@ -23,11 +41,11 @@ private:
 	void createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layout);
 	void createSampler();
 	void createBuffers();
-
+	void createRasterState();
 
 	cbWorld cbWorld;
 	ID3D11Buffer* g_cbWorld = NULL;
-
+	ID3D11Buffer* g_vertexBuffer;
 
 	ID3D11RenderTargetView*  g_backBuffer = NULL;
 	ID3D11VertexShader* g_vertexShader = NULL;
@@ -38,6 +56,8 @@ private:
 	ID3D11InputLayout* g_pixelLayout = NULL;
 	ID3D11SamplerState *samLinear = NULL;
 
+
+	ID3D11RasterizerState *rasterState = NULL;
 
 
 

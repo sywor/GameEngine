@@ -84,7 +84,9 @@
     <ClCompile Include="ButtonInput.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Object.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ButtonInput.h" />
@@ -92,6 +94,8 @@
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="hrTimer.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="Loader.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
