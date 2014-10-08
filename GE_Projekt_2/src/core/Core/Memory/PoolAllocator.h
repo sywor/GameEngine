@@ -5,7 +5,7 @@
 class PoolAllocator		: public Allocator
 {
 private:
-	int block_size;
+	uint block_size;
 	
 	struct MemIndex
 	{

@@ -1,22 +1,25 @@
 #include "ResourceLoader.hpp"
 
 
-
 namespace trr
 {
-	
+	PoolAllocator *ResourceLoader::m_pAllocator;
+
 	ResourceLoader::~ResourceLoader()
 	{
 	}
 
 
-	void Load( std::string path, std::uint64_t hash )
+	bool ResourceLoader::Load(std::string path, Resource& r, DataContainer _data)
 	{
+		// thread protection?
+		return internal_Load(path, r, _data);
 	}
 
 		
-	void Unload( std::uint64_t hash )
+	void ResourceLoader::Unload(Resource& r)
 	{
+		internal_unload(r);
 	}
 
 

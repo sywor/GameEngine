@@ -267,7 +267,7 @@
 #include <Core/ContentHandler/Loaders/TestLoader.hpp>
 
 typedef trr::TestLoader TempLoader;
-typedef trr::ResourceManager< TempLoader, TempLoader > ExampleHandler;
+typedef trr::ResourceManager< 1024, 8, TempLoader, TempLoader > ExampleHandler;
 
 int _tmain(int argc, _TCHAR* argv[])
 {

@@ -1,47 +1,8 @@
-//========================================================================
-// ZipFile.cpp : API to use Zip files
-//
-// Part of the GameCode4 Application
-//
-// GameCode4 is the sample application that encapsulates much of the source code
-// discussed in "Game Coding Complete - 4th Edition" by Mike McShaffry and David
-// "Rez" Graham, published by Charles River Media. 
-// ISBN-10: 1133776574 | ISBN-13: 978-1133776574
-//
-// If this source code has found it's way to you, and you think it has helped you
-// in any way, do the authors a favor and buy a new copy of the book - there are 
-// detailed explanations in it that compliment this code well. Buy a copy at Amazon.com
-// by clicking here: 
-//    http://www.amazon.com/gp/product/1133776574/ref=olp_product_details?ie=UTF8&me=&seller=
-//
-// There's a companion web site at http://www.mcshaffry.com/GameCode/
-// 
-// The source code is managed and maintained through Google Code: 
-//    http://code.google.com/p/gamecode4/
-//
-// (c) Copyright 2012 Michael L. McShaffry and David Graham
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser GPL v3
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See 
-// http://www.gnu.org/licenses/lgpl-3.0.txt for more details.
-//
-// You should have received a copy of the GNU Lesser GPL v3
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//========================================================================
-
 // --------------------------------------------------------------------------
 // File:        ZipFile.cpp
 //
 // Purpose:     The implementation of a quick'n dirty ZIP file reader class.
-//              Original code written by Javier Arevalo. 
-//              Get zlib from http://www.cdrom.com/pub/infozip/zlib/
+//
 // --------------------------------------------------------------------------
 
 //#include "GameCodeStd.h"
@@ -159,8 +120,11 @@ bool ZipFile::Init(const std::wstring &resFileName)
 	TZipDirHeader dh;
 
 	fseek(m_pFile, -(int)sizeof(dh), SEEK_END);
+
 	long dhOffset = ftell(m_pFile);
+
 	memset(&dh, 0, sizeof(dh));
+
 	fread(&dh, sizeof(dh), 1, m_pFile);
 
 	// Check
@@ -172,9 +136,12 @@ bool ZipFile::Init(const std::wstring &resFileName)
 
 	// Allocate the data buffer, and read the whole thing.
 	m_pDirData = new char[dh.dirSize + dh.nDirEntries*sizeof(*m_papDir)];
+
 	if (!m_pDirData)
 		return false;
+
 	memset(m_pDirData, 0, dh.dirSize + dh.nDirEntries*sizeof(*m_papDir));
+
 	fread(m_pDirData, dh.dirSize, 1, m_pFile);
 
 	// Now process each entry.
@@ -215,11 +182,7 @@ bool ZipFile::Init(const std::wstring &resFileName)
 	}
 	if (!success)
 	{
-		if (m_pDirData)
-		{
-			delete[] m_pDirData;
-			m_pDirData = NULL;
-		}
+		DELETE_ARRAY(m_pDirData)
 	}
 	else
 	{
@@ -232,8 +195,9 @@ bool ZipFile::Init(const std::wstring &resFileName)
 int ZipFile::Find(const std::string &path) const
 {
 	std::string lowerCase = path;
-	std::transform(lowerCase.begin(), lowerCase.end(), lowerCase.begin(), (int(*)(int)) std::tolower);
+	std::transform(lowerCase.begin(), lowerCase.end(), lowerCase.begin(), std::tolower);//(int(*)(int))
 	ZipContentsMap::const_iterator i = m_ZipContentsMap.find(lowerCase);
+
 	if (i == m_ZipContentsMap.end())
 		return -1;
 
@@ -251,11 +215,7 @@ void ZipFile::End()
 {
 	m_ZipContentsMap.clear();
 
-	if (m_pDirData)
-	{
-		delete[] m_pDirData;
-		m_pDirData = NULL;
-	}
+	DELETE_ARRAY(m_pDirData)
 
 	m_nEntries = 0;
 }
@@ -310,7 +270,9 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 	TZipLocalHeader h;
 
 	memset(&h, 0, sizeof(h));
+
 	fread(&h, sizeof(h), 1, m_pFile);
+
 	if (h.sig != TZipLocalHeader::SIGNATURE)
 		return false;
 
@@ -365,7 +327,6 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 }
 
 
-
 // --------------------------------------------------------------------------
 // Function:      ReadLargeFile
 // Purpose:       Uncompress a complete file with callbacks.
@@ -384,7 +345,9 @@ bool ZipFile::ReadLargeFile(int i, void *pBuf, void(*progressCallback)(int, bool
 	TZipLocalHeader h;
 
 	memset(&h, 0, sizeof(h));
+
 	fread(&h, sizeof(h), 1, m_pFile);
+
 	if (h.sig != TZipLocalHeader::SIGNATURE)
 		return false;
 
@@ -454,102 +417,3 @@ bool ZipFile::ReadLargeFile(int i, void *pBuf, void(*progressCallback)(int, bool
 	delete[] pcData;
 	return ret;
 }
-
-
-/*******************************************************
-Example useage:
-
-void MakePath(const char *pszPath)
-{
-if (pszPath[0] == '\0')
-return;
-
-char buf[1000];
-const char *p = pszPath;
-
-//  printf("MakePath(\"%s\")\n", pszPath);
-
-// Skip machine name in network paths like \\MyMachine\blah...
-if (p[0] == '\\' && p[1] == '\\')
-p = strchr(p+2, '\\');
-
-while (p != NULL && *p != '\0')
-{
-p = strchr(p, '\\');
-
-if (p)
-{
-memcpy(buf, pszPath, p - pszPath);
-buf[p - pszPath] = 0;
-p++;
-}
-else
-strcpy(buf, pszPath);
-
-if (buf[0] != '\0' && strcmp(buf, ".") && strcmp(buf, ".."))
-{
-//      printf("  Making path: \"%s\"\n", buf);
-mkdir(buf);
-}
-}
-}
-
-
-
-void main(int argc, const char *argv[])
-{
-if (argc > 1)
-{
-FILE *f = fopen(argv[1], "rb");
-if (f)
-{
-ZipFile zip;
-
-if (true != zip.Init(f))
-printf("Bad Zip file: \"%s\"\n", argv[1]);
-else
-{
-for (int i = 0; i < zip.GetNumFiles(); i++)
-{
-int len = zip.GetFileLen(i);
-char fname[1000];
-
-zip.GetFilename(i, fname);
-
-printf("File \"%s\" (%d bytes): ", fname, len);
-
-char *pData = GCC_NEW char[len];
-if (!pData)
-printf("OUT OF MEMORY\n");
-else if (true == zip.ReadFile(i, pData))
-{
-printf("OK\n");
-char dpath[1000];
-
-sprintf(dpath, "Data\\%s", fname);
-char *p = strrchr(dpath, '\\');
-if (p)
-{
-*p = '\0';
-MakePath(dpath);
-*p = '\\';
-}
-FILE *fo = fopen(dpath, "wb");
-if (fo)
-{
-fwrite(pData, len, 1, fo);
-fclose(fo);
-}
-}
-else
-printf("ERROR\n");
-delete[] pData;
-}
-zip.End();
-}
-
-fclose(f);
-}
-}
-}
-******************************************************/

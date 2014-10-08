@@ -5,15 +5,21 @@
 
 /* Include headers for loaders here */
 #include <Core/ContentHandler/Loaders/TestLoader.hpp>
-
+#include <Core\ContentHandler\Loaders\RawDataLoader.hpp>
 namespace trr
 {
 	typedef ResourceManager<
-	
+
+		/* block size of the internal memory allocator */
+		8,
+
+		/* Size of the internal memory allocator */
+		1024,
+
 		/* List loader classes here */
 
-		TestLoader
-
+		TestLoader,
+		RawDataLoader		// raw char buffer
 
 
 	

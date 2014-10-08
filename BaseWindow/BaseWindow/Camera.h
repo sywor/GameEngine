@@ -1,7 +1,8 @@
 #ifndef _XCAMERA
 #define _XCAMERA
 
-#include <d3dx10.h>
+#include "stdafx.h"
+//#include <d3dx10.h>
 #include "hrTimer.h"
 
 #define TWO_PI 6.283185307179586476925286766559

@@ -13,11 +13,14 @@ namespace trr
 	{
 	}
 
-	void TestLoader::internal_Load( std::string path, std::uint64_t hash )
+	bool TestLoader::internal_Load(std::string path, Resource& r, DataContainer _data)
 	{
+		char* test = _data.data;
+
+		return false;
 	}
 
-	void TestLoader::internal_unload( std::uint64_t hash )
+	void TestLoader::internal_unload(Resource& r)
 	{
 	}
 }

@@ -19,4 +19,34 @@ program - john & rickard
 	level-init och hantering
 
 
+
+
+
+	gfxMeshStruct
+		pos
+		rot
+		scale
+		fade
+		model
+		texture
+
+	stack
+	*|psrms|psrMs|psrms|psrms|psrms|psrms|psrms|psrms|psrms
+
+
+	AddRenderCall( gfxMeshStruct* array, int nr )
+
+	gfxMesh
+		vertex*
+		normals*
+		int number
+
+	getres
+		load
+			gfx( data* )
+				save, return id
+
+
+
+
 */

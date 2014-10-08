@@ -6,11 +6,14 @@
 #include <D3DX11.h>
 #include <D3DX10math.h>
 #include <d3dCompiler.h>
-
+//#include <DirectXMath.h>
 #include <string>
 #include <vector>
 #include <map>
 #include <fstream>
+
+//#define D3DXMATRIX DirectX::XMMATRIX
+//#define D3DXVECTOR3 DirectX::XMFLOAT3
 
 #define SAFE_RELEASE(x) if( x ) { (x)->Release(); (x) = NULL; }
 #define SAFE_DELETE(x) if( x ) { delete(x); (x) = NULL; }
@@ -36,6 +39,7 @@ static const int HEIGT = 800;
 
 struct cbWorld
 {
+	
 	D3DXMATRIX world;
 	D3DXMATRIX view;
 	D3DXMATRIX projection;

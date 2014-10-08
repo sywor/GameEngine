@@ -1,8 +1,10 @@
+#ifndef MURRMURR64_HPP
+#define MURRMURR64_HPP
 #include <cstdint>
 
 #ifdef _WIN64
 // 64-bit hash for 64-bit platforms
-uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
+static uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
 {
 	const uint64_t m = 0xc6a4a7935bd1e995;
 	const int r = 47;
@@ -46,7 +48,7 @@ uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
 }
 #else
 // 64-bit hash for 32-bit platforms
-uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
+static uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
 {
 	const unsigned int m = 0x5bd1e995;
 	const int r = 24;
@@ -96,4 +98,5 @@ uint64_t MurmurHash64(const void * key, int len, unsigned int seed)
 
 	return h;
 }
+#endif
 #endif

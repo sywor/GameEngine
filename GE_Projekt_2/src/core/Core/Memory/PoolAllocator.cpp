@@ -5,8 +5,8 @@
 
 bool PoolAllocator::internal_init( uint32_t size_in_bytes )
 {
-	openList.reserve( 20000 );
-	closedList.reserve( 20000 );
+	openList.reserve( 1000 );
+	closedList.reserve( 1000 );
 
 	data = new uint8_t[size_in_bytes];	
 	if(!data)
@@ -22,7 +22,7 @@ void PoolAllocator::checkMerge(unsigned int i)
 	auto& list( openList );
 	if( i + 1 > list.size() )
 		return;
-	if( list[i].size != list[i+1].size && i - 1 >= 0 && list[i-1].size == list[i].size )
+	if( list[i].size != list[i+1].size && (int)i - 1 >= 0 && list[i-1].size == list[i].size )
 		i--;
 	if( list[i].size == list[i+1].size )
 	{
@@ -163,7 +163,7 @@ int PoolAllocator::insertClosedList( MemIndex t )
 
 void* PoolAllocator::closeMemory(unsigned int i, uint size_in_bytes)
 {
-	if( openList[i].size / 2 < size_in_bytes || openList[i].size / 2 < block_size )
+	if (openList[i].size / 2 < size_in_bytes || openList[i].size / 2 < block_size)
 	{
 		void* t = openList[i].memory;
 		insertClosedList( openList[i] );
