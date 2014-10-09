@@ -11,6 +11,7 @@
 #include <Core/ContentHandler/MurrMurr64.hpp>
 #include <Core/ContentHandler/ZipHandler.hpp>
 #include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ContentHandler/CallbackContainer.hpp>
 #include <Core/ThreadPool/Threadpool.hpp>
 #include <cstdint>
 #include <array>
@@ -29,18 +30,24 @@
 #define EXIT_CRITICAL_SECTION_ASSETLIST		LeaveCriticalSection(&CriticalSection_AssetList)
 #define ENTER_CRITICAL_SECTION_GENERAL		EnterCriticalSection(&CriticalSection_General)
 #define EXIT_CRITICAL_SECTION_GENERAL		LeaveCriticalSection(&CriticalSection_General)
+#define ENTER_CRITICAL_SECTION_GENERAL		EnterCriticalSection(&CriticalSection_zLib)
+#define EXIT_CRITICAL_SECTION_GENERAL		LeaveCriticalSection(&CriticalSection_zLib)
 #else
 #include <mutex>
-#define ENTER_CRITICAL_SECTION_ASSETLIST	mustex_assetList.lock()
-#define EXIT_CRITICAL_SECTION_ASSETLIST		mustex_assetList.unlock()
-#define ENTER_CRITICAL_SECTION_GENERAL		mustex_general.lock()
-#define EXIT_CRITICAL_SECTION_GENERAL		mustex_general.unlock()
+#define ENTER_CRITICAL_SECTION_ASSETLIST	mutex_assetList.lock()
+#define EXIT_CRITICAL_SECTION_ASSETLIST		mutex_assetList.unlock()
+#define ENTER_CRITICAL_SECTION_GENERAL		mutex_general.lock()
+#define EXIT_CRITICAL_SECTION_GENERAL		mutex_general.unlock()
+#define ENTER_CRITICAL_SECTION_ZLIB			mutex_zLib.lock()
+#define EXIT_CRITICAL_SECTION_ZLIB			mutex_zLib.unlock()
 #endif
 #else
 #define ENTER_CRITICAL_SECTION_ASSETLIST
 #define EXIT_CRITICAL_SECTION_ASSETLIST
 #define ENTER_CRITICAL_SECTION_GENERAL
 #define EXIT_CRITICAL_SECTION_GENERAL
+#define ENTER_CRITICAL_SECTION_ZLIB
+#define EXIT_CRITICAL_SECTION_ZLIB
 #endif
 
 
@@ -94,6 +101,8 @@ namespace trr
 				return; // Should improve error handling / author
 			if (!InitializeCriticalSectionAndSpinCount(&CriticalSection_General, CRITICAL_SECTION_FAILED_INIT))
 				return; // Should improve error handling / author
+			if (!InitializeCriticalSectionAndSpinCount(&CriticalSection_zLib, CRITICAL_SECTION_FAILED_INIT))
+				return; // Should improve error handling / author
 #endif
 
 			workPool.Initialize( 2 ); 
@@ -115,6 +124,16 @@ namespace trr
 					contentAllocator.deallocate( loaders[i] );
 				loaders[ i ] = nullptr;
 			}
+		}
+		
+		/*
+		*/
+		bool InitContentLib(const std::wstring contentLib)
+		{
+			ENTER_CRITICAL_SECTION_GENERAL;
+			bool result = contentZipFile.Init(contentLib);
+			EXIT_CRITICAL_SECTION_GENERAL;
+			return result;
 		}
 
 
@@ -162,6 +181,8 @@ namespace trr
 					r.loaderIndex = i;
 
 					DataContainer rawData;
+
+					ENTER_CRITICAL_SECTION_ZLIB;
 					int zipId = contentZipFile.Find(fileName);
 					bool zipReadResult = false;
 
@@ -171,6 +192,7 @@ namespace trr
 						rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
 						zipReadResult	= contentZipFile.ReadFile(zipId, rawData.data);
 					}
+					EXIT_CRITICAL_SECTION_ZLIB;
 
 					if (!zipReadResult)
 					{
@@ -206,15 +228,6 @@ namespace trr
 			EXIT_CRITICAL_SECTION_GENERAL;
 		}
 
-		/*
-		*/
-		bool InitContentLib(const std::wstring contentLib)
-		{
-			ENTER_CRITICAL_SECTION_GENERAL;
-			bool result = contentZipFile.Init(contentLib);
-			EXIT_CRITICAL_SECTION_GENERAL;
-			return result;
-		}
 
 		/*
 			Will decrease the referense counter of the supplied hash
@@ -282,12 +295,15 @@ namespace trr
 #ifdef USE_CRITICAL_SECTION_LOCK
 		CRITICAL_SECTION CriticalSection_AssetList;
 		CRITICAL_SECTION CriticalSection_General;
+		CRITICAL_SECTION CriticalSection_zLib;
 #else
-		std::mutex mustex_assetList;
-		std::mutex mustex_general;
+		std::mutex mutex_assetList;
+		std::mutex mutex_general;
+		std::mutex mutex_zLib;
 #endif
+		
 		ThreadPool		workPool;
-
+		std::vector< CallbackContainer >	callbackList;
 	};
 
 }

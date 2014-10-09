@@ -34,6 +34,7 @@ std::string ws2s(const std::wstring& s)
 
 
 
+
 int main( int argc, char* argv[] )
 {
 	//trr::Level1 level;
@@ -42,17 +43,22 @@ int main( int argc, char* argv[] )
 
 	int flag = 0;
 
-	trr::contentManager.InitContentLib(s2ws("C:/temp/GameEngine/GE_Projekt_2/test.zip"));
+	trr::contentManager.InitContentLib(s2ws("test.zip"));
+
+
 	trr::contentManager.GetResource("test.txt.test", [ &flag ]( void* data )
 	{
-
-		LOG_DEBUG << "callback: " << (char*)data << std::endl;
+		static std::mutex tex;
+		char code[10];
+		std::memcpy( code, data, 10 );
+		LOG_DEBUG << "callback: " << code << std::endl;
 
 		trr::Entity ent = trr::entityHandler.CreateEntity();
 		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
 
 		flag = 1;
 	});
+
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	

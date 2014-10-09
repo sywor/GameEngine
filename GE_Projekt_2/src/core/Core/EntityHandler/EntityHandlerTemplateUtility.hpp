@@ -45,6 +45,12 @@ template< class T, class Tuple >
 struct ArrayIndex;
 
 template< class T, class... Types >
+struct ArrayIndex< T, std::tuple< T, Types... >>
+{
+	static const std::size_t index = 0;
+};
+
+template< class T, class... Types >
 struct ArrayIndex< T, std::tuple< Types... >>
 {
 	static const std::size_t index = 0;
