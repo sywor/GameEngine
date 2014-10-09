@@ -144,7 +144,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
 
-	Cam->setPerspectiveProjectionLH(45.0f, (float)(g_Width / g_Height), 1.0f, 100.0f);
+	Cam->setPerspectiveProjectionLH(45.0f, (float)(g_Width / g_Height), 1.0f, 1000000.0f);
 	Cam->setPositionAndView(0.0f, 0.0f, -10.0f, 0.0f, 0.0f);
 	Cam->setMovementSpeed(10);
 
@@ -201,7 +201,7 @@ HRESULT InitWindow(HINSTANCE hInstance, int nCmdShow)
 
 	// Create window
 	g_hInst = hInstance;
-	RECT rc = { 0, 0, WIDTH, HEIGT };
+	RECT rc = { 0, 0, WIDTH, HEIGHT };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 
 	if (!(g_hWnd = CreateWindow(

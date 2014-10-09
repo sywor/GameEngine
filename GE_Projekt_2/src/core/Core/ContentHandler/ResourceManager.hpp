@@ -20,7 +20,6 @@
 #include <functional>
 
 
-#define NO_ASSET_TO_UNLOAD -1
 
 
 #ifdef USE_ASYNC_LOCKING
@@ -146,26 +145,20 @@ namespace trr
 		*/
 		const Resource GetResource(std::string path)
 		{
+			// get hash
 			std::uint64_t hash = MurmurHash64( path.data(), path.length(), 42);
 			Resource r;
 
 			// return asset if already loaded
-			ENTER_CRITICAL_SECTION_ASSETLIST;
-			Resource* found = nullptr;
-			for (Resource& asset : assetList)
+			ENTER_CRITICAL_SECTION_ASSETLIST;			
+			if (assetList.find(hash) != assetList.end())
 			{
-				if (asset.hash == hash)
-				{
-					asset.nrReferences++;
-					found = &asset;
-					break;
-				}
+				assetList[hash].nrReferences++;
+				EXIT_CRITICAL_SECTION_ASSETLIST;
+				return assetList[hash];
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
-			if (found)
-			{
-				return *found;
-			}
+
 			
 			// find compatible loader to new resource
 			std::size_t sep = path.find_last_of(".");
@@ -189,7 +182,7 @@ namespace trr
 					if (zipId != -1)
 					{
 						int fileLength	= contentZipFile.GetFileLen(zipId);
-						rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+						rawData			= DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
 						zipReadResult	= contentZipFile.ReadFile(zipId, rawData.data);
 					}
 					EXIT_CRITICAL_SECTION_ZLIB;
@@ -203,7 +196,7 @@ namespace trr
 						if (loaders[i]->Load(fileName, r, rawData))
 						{
 							ENTER_CRITICAL_SECTION_ASSETLIST;
-							assetList.push_back(r);
+							assetList[hash] = r;
 							EXIT_CRITICAL_SECTION_ASSETLIST;
 						}
 					}
@@ -235,33 +228,34 @@ namespace trr
 		*/
 		void Unload(std::uint64_t handle)
 		{
-			int assetToUnload = NO_ASSET_TO_UNLOAD;
-			ENTER_CRITICAL_SECTION_ASSETLIST;
-			for (int i = 0; i < assetList.size(); ++i)
-			{
-				if (assetList[i].hash == handle)
-				{
-					if (assetList[i].loaderIndex < loaders.size())	// find associated unloader
-					{
-						assetList[i].nrReferences--;
+			Resource* toUnload = nullptr;
 
-						// unload
-						if (assetList[i].nrReferences <= 0)
-						{
-							assetToUnload = i;
-							break;
-						}
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			if (assetList.find(handle) != assetList.end())
+			{
+				Resource& r = assetList[handle];
+
+				if (r.loaderIndex < loaders.size())	// find associated (un)loader --- this is a potential problem if we unmount loaders during runtime Resource should probably contain extension as well
+				{
+					if (--r.nrReferences <= 0)
+					{
+						toUnload = &r;
 					}
+				}
+				else 
+				{
+					// the loaders have been tampered with!
+					// we can't deallocate the data properly
 				}
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
-			
-			if ( assetToUnload != NO_ASSET_TO_UNLOAD )
+
+			if ( toUnload )
 			{
-				loaders[assetList[ assetToUnload ].loaderIndex]->Unload( assetList[ assetToUnload ] );
+				loaders[ toUnload->loaderIndex ]->Unload( *toUnload );
 				
 				ENTER_CRITICAL_SECTION_ASSETLIST;
-				assetList.erase( assetList.begin() + assetToUnload ); 
+				assetList.erase(handle);
 				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
 		}
@@ -286,11 +280,14 @@ namespace trr
 
 
 	private:
-		std::array< ResourceLoader*, sizeof...( LoadersDef ) >	loaders;	
-		std::vector< Resource >									assetList;
+		std::array< ResourceLoader*, sizeof...( LoadersDef ) >	loaders;
+		std::map<std::uint64_t, Resource>	assetList;
+		std::vector< CallbackContainer >	callbackList;
 
 		PoolAllocator	contentAllocator;
 		ZipFile			contentZipFile;
+		ThreadPool		workPool;
+		
 
 #ifdef USE_CRITICAL_SECTION_LOCK
 		CRITICAL_SECTION CriticalSection_AssetList;
@@ -301,9 +298,7 @@ namespace trr
 		std::mutex mutex_general;
 		std::mutex mutex_zLib;
 #endif
-		
-		ThreadPool		workPool;
-		std::vector< CallbackContainer >	callbackList;
+	
 	};
 
 }

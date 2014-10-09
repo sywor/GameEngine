@@ -9,7 +9,8 @@ Graphics::Graphics()
 	createSampler();
 	createBuffers();
 	createRasterState();
-
+	createViewport();
+	createBlendState();
 
 	//------------------------------ temp variables for testing
 
@@ -22,16 +23,16 @@ Graphics::Graphics()
 
 	for (int i = 0; i < 6; i++)
 	{
-		wall[i].normal = D3DXVECTOR4(0, 0, -1, 0);
-		wall[i].texC = D3DXVECTOR2(0, 0);
+		wall[i].normal = D3DXVECTOR4(0, 0, -1, 1);
+		wall[i].texC = D3DXVECTOR2(i, i);
 	}
 
-	wall[0].pos = D3DXVECTOR4(20, 20, 20, 1);
-	wall[1].pos = D3DXVECTOR4(20, -20, 20, 1);
-	wall[2].pos = D3DXVECTOR4(-20, -20, 20, 1);
-	wall[3].pos = D3DXVECTOR4(20, 20, 20, 1);
-	wall[4].pos = D3DXVECTOR4(-20, -20, 20, 1);
-	wall[5].pos = D3DXVECTOR4(-20, 20, 20, 1);
+	wall[0].pos = D3DXVECTOR4(200, 200, 0, 1);
+	wall[1].pos = D3DXVECTOR4(200, -200, 0, 1);
+	wall[2].pos = D3DXVECTOR4(-200, -200, 0, 1);
+	wall[3].pos = D3DXVECTOR4(200, 200, 0, 1);
+	wall[4].pos = D3DXVECTOR4(-200, -200, 0, 1);
+	wall[5].pos = D3DXVECTOR4(-200, 200, 0, 1);
 
 
 
@@ -71,6 +72,7 @@ Graphics::~Graphics()
 HRESULT Graphics::Update(float _deltaTime)
 {
 	D3DXMATRIX world;
+	D3DXMatrixIdentity(&world);
 
 	cbWorld.world = world;
 	cbWorld.worldInv = world;
@@ -86,6 +88,8 @@ HRESULT Graphics::Update(float _deltaTime)
 HRESULT Graphics::Render(float _deltaTime)
 {
 	//D3DXCOLOR color = D3DXCOLOR(Cam->getCameraPosition().x, Cam->getCameraPosition().y, Cam->getCameraPosition().z,0);
+	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
+	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
 
 	g_DeviceContext->ClearRenderTargetView(g_backBuffer, D3DXCOLOR(0.0f, 0.0f, 0.0f, 0));
 
@@ -98,13 +102,19 @@ HRESULT Graphics::Render(float _deltaTime)
 	UINT strides = sizeof(Vertex);
 	UINT offset = 0;
 
-	
+	g_DeviceContext->OMSetRenderTargets(1, &g_backBuffer,NULL);
 
-	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
-	g_DeviceContext->Draw(6,0);
 
-	//g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
-	//g_DeviceContext->Draw(10,0);
+	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	g_DeviceContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
+
+
+	//g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
+	//g_DeviceContext->Draw(6,0);
+
+	g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
+	g_DeviceContext->Draw(3000,0);
 
 
 
@@ -170,7 +180,7 @@ void Graphics::createShader(std::string _shader, std::string _shaderModel)
 			PostQuitMessage(0);
 
 		}
-		createInputLayout(shaderBlob, g_geometryLayout);
+		//createInputLayout(shaderBlob, g_geometryLayout);
 
 		shaderBlob->Release();
 	}
@@ -309,7 +319,7 @@ void Graphics::createSampler()
 	if (FAILED(result))
 		MessageBox(NULL, "FAIL", "Sampler Error", MB_OK);
 
-	g_DeviceContext->PSSetSamplers(0, 1, &samLinear);
+	g_DeviceContext->PSSetSamplers(1, 1, &samLinear);
 }
 
 void Graphics::createBuffers()
@@ -332,6 +342,7 @@ void Graphics::createBuffers()
 		cbDesc.ByteWidth = sizeof(cbWorld);
 	}
 
+
 	hr = g_Device->CreateBuffer(&cbDesc, NULL, &g_cbWorld);
 	if (FAILED(hr))
 	{
@@ -352,7 +363,7 @@ void Graphics::createRasterState()
 
 	// Setup the raster description which will determinatie how and what polygons will be drawn.
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.CullMode = D3D11_CULL_NONE;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -369,4 +380,43 @@ void Graphics::createRasterState()
 		MessageBox(NULL, "Failed Making Constant Buffer", "Create Buffer", MB_OK);
 
 	}
+}
+
+void Graphics::createViewport()
+{
+
+	// Setup the viewport for rendering.
+	viewport.Width = (float)WIDTH;
+	viewport.Height = (float)HEIGHT;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+
+	// Create the viewport.
+	g_DeviceContext->RSSetViewports(1, &viewport);
+}
+
+void Graphics::createBlendState()
+{
+	HRESULT result = S_OK;
+
+
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+	blendDesc.RenderTarget[0].BlendEnable = FALSE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+	result = g_Device->CreateBlendState(&blendDesc, &g_blendState);
+	if (FAILED(result))
+		MessageBox(NULL, "Failed Making Blendstate", "Create Blendstate", MB_OK);
+
 }
