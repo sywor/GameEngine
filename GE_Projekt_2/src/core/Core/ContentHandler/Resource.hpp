@@ -3,17 +3,6 @@
 
 #include <cstdint>
 
-// class TEMPLATE
-// int hej[8]
-
-// template <t>
-// class IRESOURCEDATA
-// int size
-// T   data;
-
-// 36 1 2 3 4 5 6 7 8
-
-
 namespace trr
 {
 

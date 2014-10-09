@@ -40,18 +40,38 @@ int main( int argc, char* argv[] )
 	//level.Init();
 	//ossianTest::zipTest();
 
+	int flag = 0;
 
+	trr::contentManager.InitContentLib(s2ws("C:/temp/GameEngine/GE_Projekt_2/test.zip"));
+	trr::contentManager.GetResource("test.txt.test", [ &flag ]( void* data )
+	{
+
+		LOG_DEBUG << "callback: " << (char*)data << std::endl;
+
+		trr::Entity ent = trr::entityHandler.CreateEntity();
+		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
+
+		flag = 1;
+	});
+
+	LOG_DEBUG << "main thread continues" << std::endl;
 	
-		trr::contentManager.InitContentLib(s2ws("C:/temp/GameEngine/GE_Projekt_2/test.zip"));
-		trr::Resource r = trr::contentManager.GetResource("test.txt.test");
-		trr::Resource rr = trr::contentManager.GetResource("test.txt.test");
+	//trr::contentManager.InitContentLib(s2ws("C:/temp/GameEngine/GE_Projekt_2/test.zip"));
+	//trr::Resource r = trr::contentManager.GetResource("test.txt.test");
+	//trr::Resource rr = trr::contentManager.GetResource("test.txt.test");
+	//
+	//trr::contentManager.Unload(r.hash);
+	//trr::contentManager.Unload(rr.hash);
 		
-		trr::contentManager.Unload(r.hash);
-		trr::contentManager.Unload(rr.hash);
-		
-	
+	while (flag == 0)
+	{
+		// empty
+	}
+
+	int breakpoint = 0;
+
  	_CrtDumpMemoryLeaks();
-	utilities::pause();
+	//utilities::pause();
 	return 0;
 }
 

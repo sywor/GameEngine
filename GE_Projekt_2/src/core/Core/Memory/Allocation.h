@@ -1,6 +1,6 @@
 #pragma once
 
-#define CRITICAL_SECTION_FAILED_INIT 0x00000400
+#include <utility/asyncSettings.hpp>
 
 #include <cstdint>
 #include <vector>
@@ -8,10 +8,8 @@
 #include <Windows.h>
 #include <mutex>
 
-#define USE_ASYNC_LOCKING
-#define USE_CRITICAL_SECTION_LOCK
 
-#ifdef USE_LOCKING
+#ifdef USE_ASYNC_LOCKING
 	#ifdef USE_CRITICAL_SECTION_LOCK
 		#define ENTER_CRITICAL_SECTION EnterCriticalSection(&CriticalSection)
 		#define EXIT_CRITICAL_SECTION LeaveCriticalSection(&CriticalSection)

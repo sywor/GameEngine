@@ -5,15 +5,44 @@
 #include "Resource.hpp"
 #include "TemplateMagic.hpp"
 
+#include <utility/asyncSettings.hpp>
+
 #include "../Memory/DefaultAllocator.h"
 #include <Core/ContentHandler/MurrMurr64.hpp>
 #include <Core/ContentHandler/ZipHandler.hpp>
 #include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ThreadPool/Threadpool.hpp>
 #include <cstdint>
 #include <array>
 #include <vector>
 #include <string>
 #include <functional>
+
+
+#define NO_ASSET_TO_UNLOAD -1
+
+
+#ifdef USE_ASYNC_LOCKING
+#ifdef USE_CRITICAL_SECTION_LOCK
+#include <Windows.h>
+#define ENTER_CRITICAL_SECTION_ASSETLIST	EnterCriticalSection(&CriticalSection_AssetList)
+#define EXIT_CRITICAL_SECTION_ASSETLIST		LeaveCriticalSection(&CriticalSection_AssetList)
+#define ENTER_CRITICAL_SECTION_GENERAL		EnterCriticalSection(&CriticalSection_General)
+#define EXIT_CRITICAL_SECTION_GENERAL		LeaveCriticalSection(&CriticalSection_General)
+#else
+#include <mutex>
+#define ENTER_CRITICAL_SECTION_ASSETLIST	mustex_assetList.lock()
+#define EXIT_CRITICAL_SECTION_ASSETLIST		mustex_assetList.unlock()
+#define ENTER_CRITICAL_SECTION_GENERAL		mustex_general.lock()
+#define EXIT_CRITICAL_SECTION_GENERAL		mustex_general.unlock()
+#endif
+#else
+#define ENTER_CRITICAL_SECTION_ASSETLIST
+#define EXIT_CRITICAL_SECTION_ASSETLIST
+#define ENTER_CRITICAL_SECTION_GENERAL
+#define EXIT_CRITICAL_SECTION_GENERAL
+#endif
+
 
 static bool MatchExtension(const char* fExt, const char *lExt)
 {
@@ -60,6 +89,15 @@ namespace trr
 		ResourceManager()
 			: contentAllocator(MemoryBlockSize, sizeOfMemory )
 		{
+#ifdef USE_CRITICAL_SECTION_LOCK
+			if (!InitializeCriticalSectionAndSpinCount(&CriticalSection_AssetList, CRITICAL_SECTION_FAILED_INIT))
+				return; // Should improve error handling / author
+			if (!InitializeCriticalSectionAndSpinCount(&CriticalSection_General, CRITICAL_SECTION_FAILED_INIT))
+				return; // Should improve error handling / author
+#endif
+
+			workPool.Initialize( 2 ); 
+
 			for( int i = 0; i < sizeof...(LoadersDef); i++ )
 			{
 				loaders[ i ] = nullptr;
@@ -89,18 +127,25 @@ namespace trr
 		*/
 		const Resource GetResource(std::string path)
 		{
-			// implement proper hash!!!
 			std::uint64_t hash = MurmurHash64( path.data(), path.length(), 42);
 			Resource r;
 
 			// return asset if already loaded
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			Resource* found = nullptr;
 			for (Resource& asset : assetList)
 			{
 				if (asset.hash == hash)
 				{
 					asset.nrReferences++;
-					return asset;
+					found = &asset;
+					break;
 				}
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+			if (found)
+			{
+				return *found;
 			}
 			
 			// find compatible loader to new resource
@@ -135,7 +180,9 @@ namespace trr
 					{
 						if (loaders[i]->Load(fileName, r, rawData))
 						{
+							ENTER_CRITICAL_SECTION_ASSETLIST;
 							assetList.push_back(r);
+							EXIT_CRITICAL_SECTION_ASSETLIST;
 						}
 					}
 					contentAllocator.deallocate(rawData.data);				
@@ -145,19 +192,29 @@ namespace trr
 		}
 
 		/*
+		Attempts to load asset and call the supplied function once loaded.
+		data-pointer is pointer of the result container associated with the sough loader.
+		*/
+		void GetResource(std::string path, std::function<void(void* data)> callback)
+		{
+			ENTER_CRITICAL_SECTION_GENERAL;
+			workPool.Enqueue( [ this, path, callback ]()
+			{
+				Resource res = GetResource( path );
+				callback( res.data );
+			});
+			EXIT_CRITICAL_SECTION_GENERAL;
+		}
+
+		/*
 		*/
 		bool InitContentLib(const std::wstring contentLib)
 		{
-			if (!contentZipFile.Init(contentLib))
-				return false;
-
-			return true;
+			ENTER_CRITICAL_SECTION_GENERAL;
+			bool result = contentZipFile.Init(contentLib);
+			EXIT_CRITICAL_SECTION_GENERAL;
+			return result;
 		}
-		/*
-			Attempts to load asset and call the supplied function once loaded.
-			data-pointer is pointer of the result container associated with the sough loader.
-		*/
-		void GetResource( std::string path, std::function<void(void* data)> callback );
 
 		/*
 			Will decrease the referense counter of the supplied hash
@@ -165,6 +222,8 @@ namespace trr
 		*/
 		void Unload(std::uint64_t handle)
 		{
+			int assetToUnload = NO_ASSET_TO_UNLOAD;
+			ENTER_CRITICAL_SECTION_ASSETLIST;
 			for (int i = 0; i < assetList.size(); ++i)
 			{
 				if (assetList[i].hash == handle)
@@ -176,12 +235,21 @@ namespace trr
 						// unload
 						if (assetList[i].nrReferences <= 0)
 						{
-							loaders[assetList[i].loaderIndex]->Unload(assetList[i]);
-							assetList.erase(assetList.begin() + i);
+							assetToUnload = i;
 							break;
 						}
 					}
 				}
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+			
+			if ( assetToUnload != NO_ASSET_TO_UNLOAD )
+			{
+				loaders[assetList[ assetToUnload ].loaderIndex]->Unload( assetList[ assetToUnload ] );
+				
+				ENTER_CRITICAL_SECTION_ASSETLIST;
+				assetList.erase( assetList.begin() + assetToUnload ); 
+				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
 		}
 
@@ -210,6 +278,16 @@ namespace trr
 
 		PoolAllocator	contentAllocator;
 		ZipFile			contentZipFile;
+
+#ifdef USE_CRITICAL_SECTION_LOCK
+		CRITICAL_SECTION CriticalSection_AssetList;
+		CRITICAL_SECTION CriticalSection_General;
+#else
+		std::mutex mustex_assetList;
+		std::mutex mustex_general;
+#endif
+		ThreadPool		workPool;
+
 	};
 
 }
@@ -224,6 +302,9 @@ namespace trr
 // TO DO: Implement binary search for hash in assetList 
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
+
+// TO DO: erase of assetList in Unload must check if nrReferences is non-zero?
+// TO DO: implement better init approach for threadpool nr threads and ev. other params.
 
 
 
