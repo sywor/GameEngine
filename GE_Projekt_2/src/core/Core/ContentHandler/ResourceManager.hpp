@@ -87,6 +87,27 @@ namespace trr
 	class ResourceManager
 	{
 	private:
+		std::uint64_t MakeHash( const void * key, int len )
+		{
+			return MurmurHash64(key, len, 42);
+		}
+
+		void OnAsyncLoadFinish( std::uint64_t hash, void* data )
+		{
+			for (int i = 0; i < callbackList.size(); i++)
+			{
+				if (callbackList[i].hash == hash)
+				{
+					workPool.Enqueue([hash, data, callbackList[i]]()
+					{
+						callbackList[i].callback( data );
+					});
+
+					callbackList.erase( callbackList.begin() + i );
+					i--;
+				}
+			}
+		}
 
 	public: 
 
@@ -146,7 +167,7 @@ namespace trr
 		const Resource GetResource(std::string path)
 		{
 			// get hash
-			std::uint64_t hash = MurmurHash64( path.data(), path.length(), 42);
+			std::uint64_t hash = MakeHash( path.data(), path.length() );
 			Resource r;
 
 			// return asset if already loaded
@@ -158,7 +179,6 @@ namespace trr
 				return assetList[hash];
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
-
 			
 			// find compatible loader to new resource
 			std::size_t sep = path.find_last_of(".");
@@ -212,11 +232,27 @@ namespace trr
 		*/
 		void GetResource(std::string path, std::function<void(void* data)> callback)
 		{
+			// get hash
+			std::uint64_t hash = MakeHash(path.data(), path.length());
+
+			// return asset if already loaded
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			if (assetList.find(hash) != assetList.end())
+			{
+				assetList[hash].nrReferences++;
+				EXIT_CRITICAL_SECTION_ASSETLIST;
+				return assetList[hash];
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+
+			callbackList.push_back(CallbackContainer(hash, callback));
+
 			ENTER_CRITICAL_SECTION_GENERAL;
 			workPool.Enqueue( [ this, path, callback ]()
 			{
 				Resource res = GetResource( path );
-				callback( res.data );
+				if ( /* resource is finished */ )
+				OnAsyncLoadFinish( res.hash, res.data );
 			});
 			EXIT_CRITICAL_SECTION_GENERAL;
 		}
