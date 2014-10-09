@@ -89,18 +89,15 @@ namespace trr
 		*/
 		const Resource GetResource(std::string path)
 		{
-			// implement proper hash!!!
+			// get hash
 			std::uint64_t hash = MurmurHash64( path.data(), path.length(), 42);
 			Resource r;
 
 			// return asset if already loaded
-			for (Resource& asset : assetList)
+			if (assetList.find(hash) != assetList.end())
 			{
-				if (asset.hash == hash)
-				{
-					asset.nrReferences++;
-					return asset;
-				}
+				assetList[hash].nrReferences++;
+				return assetList[hash];
 			}
 			
 			// find compatible loader to new resource
@@ -123,7 +120,7 @@ namespace trr
 					if (zipId != -1)
 					{
 						int fileLength	= contentZipFile.GetFileLen(zipId);
-						rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+						rawData			= DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
 						zipReadResult	= contentZipFile.ReadFile(zipId, rawData.data);
 					}
 
@@ -135,7 +132,8 @@ namespace trr
 					{
 						if (loaders[i]->Load(fileName, r, rawData))
 						{
-							assetList.push_back(r);
+							assetList[hash] = r;
+							//assetList.push_back(r);
 						}
 					}
 					contentAllocator.deallocate(rawData.data);				
@@ -165,22 +163,24 @@ namespace trr
 		*/
 		void Unload(std::uint64_t handle)
 		{
-			for (int i = 0; i < assetList.size(); ++i)
+			
+			if (assetList.find(handle) != assetList.end())
 			{
-				if (assetList[i].hash == handle)
-				{
-					if (assetList[i].loaderIndex < loaders.size())	// find associated unloader
-					{
-						assetList[i].nrReferences--;
+				Resource& r = assetList[handle];
 
-						// unload
-						if (assetList[i].nrReferences <= 0)
-						{
-							loaders[assetList[i].loaderIndex]->Unload(assetList[i]);
-							assetList.erase(assetList.begin() + i);
-							break;
-						}
+				if (r.loaderIndex < loaders.size())	// find associated (un)loader --- this is a potential problem if we unmount loaders during runtime Resource should probably contain extension as well
+				{
+					if (--r.nrReferences <= 0)
+					{
+						loaders[r.loaderIndex]->Unload(r);
+						assetList.erase(handle);
 					}
+					
+				}
+				else 
+				{
+					// the loaders have been tampered with!
+					// we can't deallocate the data properly
 				}
 			}
 		}
@@ -206,10 +206,11 @@ namespace trr
 
 	private:
 		std::array< ResourceLoader*, sizeof...( LoadersDef ) >	loaders;	
-		std::vector< Resource >									assetList;
+		//std::vector< Resource >									assetList;
 
-		PoolAllocator	contentAllocator;
-		ZipFile			contentZipFile;
+		std::map<std::uint64_t, Resource>	assetList;
+		PoolAllocator						contentAllocator;
+		ZipFile								contentZipFile;
 	};
 
 }
