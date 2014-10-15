@@ -51,7 +51,7 @@ void Loader::LoadObject(char file[256],float mx,float mz,float my,float scale,Ob
 			last = false;
 			ObjFile >>x>>y>>z;
 			
-			Position.push_back(D3DXVECTOR4((x*(scale/10)*invertX),(y*(scale/10)*invertY),(-z*(scale/10)*invertZ),0));
+			Position.push_back(D3DXVECTOR4((x*(scale/10)*invertX),(y*(scale/10)*invertY),(-z*(scale/10)*invertZ),1));
 			
 		}
 		else if(0==strcmp(buffer,"vt"))
@@ -66,7 +66,7 @@ void Loader::LoadObject(char file[256],float mx,float mz,float my,float scale,Ob
 			last = false;
 			ObjFile >>x>>y>>z;
 
-			Normal.push_back(D3DXVECTOR4(x,y,z,0));
+			Normal.push_back(D3DXVECTOR4(x,y,z,1));
 		}
 
 		else if(0==strcmp(buffer,"f"))

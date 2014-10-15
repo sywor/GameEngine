@@ -42,6 +42,8 @@ private:
 	void createSampler();
 	void createBuffers();
 	void createRasterState();
+	void createViewport();
+	void createBlendState();
 
 	cbWorld cbWorld;
 	ID3D11Buffer* g_cbWorld = NULL;
@@ -55,6 +57,9 @@ private:
 	ID3D11PixelShader* g_pixelShader = NULL;
 	ID3D11InputLayout* g_pixelLayout = NULL;
 	ID3D11SamplerState *samLinear = NULL;
+	D3D11_VIEWPORT viewport;
+	ID3D11BlendState* g_blendState = NULL;
+
 
 
 	ID3D11RasterizerState *rasterState = NULL;

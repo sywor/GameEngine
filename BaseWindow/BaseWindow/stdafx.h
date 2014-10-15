@@ -21,7 +21,7 @@
 #define PI (3.14159265358979323846f)
 
 static const int WIDTH = 800;
-static const int HEIGT = 800;
+static const int HEIGHT = 800;
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")

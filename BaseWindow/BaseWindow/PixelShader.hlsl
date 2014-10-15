@@ -3,11 +3,11 @@
 struct PS_INPUT
 {
 	float4 pos		: SV_POSITION;
-	float3 normal	: NORMAL;
+	float4 normal	: NORMAL;
 	float2 tex		: TEXCOORD0;
 };
 
-Texture2D tex		: register(t0);
+//Texture2D tex		: register(t0);
 
 float4 main(PS_INPUT _input) : SV_TARGET
 {

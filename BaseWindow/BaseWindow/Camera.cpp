@@ -39,6 +39,7 @@ void Camera::setPerspectiveProjectionLH(float FOV, float aspectRatio, float zNea
 	FOV = FOV * (float) DEG_TO_RAD;
 
 	D3DXMatrixPerspectiveFovLH( &projectionMatrix, FOV, aspectRatio, zNear, zFar );
+
 }
 
 /*******************************************************************
