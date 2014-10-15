@@ -60,23 +60,12 @@ namespace trr
 		ResourceManager()
 			: contentAllocator(MemoryBlockSize, sizeOfMemory )
 		{
-			for( int i = 0; i < sizeof...(LoadersDef); i++ )
-			{
-				loaders[ i ] = nullptr;
-			}
-
 			ResourceLoader::SetAllocator(&contentAllocator);
-			InitializeArrayWithNew< LoadersDef... >( (int**)&loaders[0], &contentAllocator );
+			InitializeArrayWithNew< LoadersDef... >( &loaders, &contentAllocator );
 		}
 
 		~ResourceManager()
 		{
-			for( int i = 0; i < sizeof...(LoadersDef); ++i )
-			{
-				if( loaders[ i ] != nullptr )
-					contentAllocator.deallocate( loaders[i] );
-				loaders[ i ] = nullptr;
-			}
 		}
 
 
@@ -91,7 +80,7 @@ namespace trr
 		{
 			// get hash
 			std::uint64_t hash = MurmurHash64( path.data(), path.length(), 42);
-			Resource r;
+			Resource r(hash);
 
 			// return asset if already loaded
 			if (assetList.find(hash) != assetList.end())
@@ -104,40 +93,28 @@ namespace trr
 			std::size_t sep = path.find_last_of(".");
 			std::string fileName = path.substr(0, sep);
 			const std::string ext = path.substr(sep+1);
-			for (int i = 0; i < loaders.size(); ++i)
+			
+
+			if (loaders.find(ext) != loaders.end())
 			{
-				if (MatchExtension(ext.c_str(), loaders[i]->GetExtension().c_str()))
+				int zipId = contentZipFile.Find(fileName);
+				bool zipReadResult = false;
+				DataContainer rawData;
+
+				if (zipId != -1)
 				{
-					
-					r.hash = hash;
-					r.nrReferences++;
-					r.loaderIndex = i;
-
-					DataContainer rawData;
-					int zipId = contentZipFile.Find(fileName);
-					bool zipReadResult = false;
-
-					if (zipId != -1)
-					{
-						int fileLength	= contentZipFile.GetFileLen(zipId);
-						rawData			= DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-						zipReadResult	= contentZipFile.ReadFile(zipId, rawData.data);
-					}
-
-					if (!zipReadResult)
-					{
-						contentAllocator.deallocate(rawData.data);
-					}
-					else
-					{
-						if (loaders[i]->Load(fileName, r, rawData))
-						{
-							assetList[hash] = r;
-							//assetList.push_back(r);
-						}
-					}
-					contentAllocator.deallocate(rawData.data);				
+					int fileLength = contentZipFile.GetFileLen(zipId);
+					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
 				}
+
+				if (zipReadResult && loaders[ext]->Load(r, rawData))
+				{
+					r.nrReferences++;
+					r.loaderExtension = ext;
+					assetList[hash] = r;
+				}
+				contentAllocator.deallocate(rawData.data);
 			}
 			return r;
 		}
@@ -168,14 +145,13 @@ namespace trr
 			{
 				Resource& r = assetList[handle];
 
-				if (r.loaderIndex < loaders.size())	// find associated (un)loader --- this is a potential problem if we unmount loaders during runtime Resource should probably contain extension as well
+				if (loaders.find(r.getExtension()) != loaders.end())
 				{
 					if (--r.nrReferences <= 0)
 					{
-						loaders[r.loaderIndex]->Unload(r);
+						loaders[r.getExtension()]->Unload(r);
 						assetList.erase(handle);
 					}
-					
 				}
 				else 
 				{
@@ -205,12 +181,15 @@ namespace trr
 
 
 	private:
-		std::array< ResourceLoader*, sizeof...( LoadersDef ) >	loaders;	
+		//std::array< ResourceLoader*, sizeof...( LoadersDef ) >	loaders;	
 		//std::vector< Resource >									assetList;
 
 		std::map<std::uint64_t, Resource>	assetList;
+		std::map<const std::string, ResourceLoader*>	loaders;
 		PoolAllocator						contentAllocator;
 		ZipFile								contentZipFile;
+
+		
 	};
 
 }

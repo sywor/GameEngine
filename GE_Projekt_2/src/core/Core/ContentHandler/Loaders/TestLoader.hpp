@@ -11,17 +11,16 @@ namespace trr
 	{
 	private:
 
-		virtual bool internal_Load(std::string path, Resource& r, DataContainer _data)	override;
-		virtual void internal_unload(Resource& r)					override;
+		virtual bool internal_Load(void* data, DataContainer _data)	override;
+		virtual void internal_unload(void* data)					override;
 
 	public:
 		TestLoader();
 		virtual ~TestLoader() override;
 
+		const std::string GetExtension() final { return "test"; }
 
 	private:
-
-		const std::string GetExtension() final { return "test"; }
 
 	};
 
