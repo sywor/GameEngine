@@ -204,19 +204,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	/* --- STACK TESTS --- */
 	/* NO THREADS */
 	//stackScen1<StackAllocator>(&allocationManagers1.at(0), i);
-	//stackScen1<DefaultAllocator>(&allocationManagers2.at(0), i);
-	stackScen2<StackAllocator, funky2>(&allocationManagers1.at(0), i);
-	stackScen2<DefaultAllocator, funky2>(&allocationManagers2.at(0), i);
+	//stackScen2<StackAllocator>(&allocationManagers2.at(0), i);
+
 	/* /NO THREADS */
 
 	/* MULTI THREADS */
-	//std::thread q(stackScen1<StackAllocator>, &allocationManagers1.at(0), i);
-	//std::thread p(stackScen1<DefaultAllocator>, &allocationManagers2.at(0), i);
-	//std::thread q(stackScen2<StackAllocator, littleFunc>, &allocationManagers1.at(0), i);
-	//std::thread p(stackScen2<DefaultAllocator, littleFunc>, &allocationManagers2.at(0), i);
+	std::thread q(stackScen1<StackAllocator>, &allocationManagers1.at(0), i);
+	std::thread p(stackScen2<StackAllocator>, &allocationManagers2.at(0), i);
 
-	//q.join();
-	//p.join();
+	q.join();
+	p.join();
 	/* /MULTI THREADS */
 	/* --- /STACK TESTS --- */
 	t.end();
