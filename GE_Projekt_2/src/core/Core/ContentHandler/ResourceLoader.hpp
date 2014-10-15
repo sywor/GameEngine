@@ -16,8 +16,8 @@ namespace trr
 	{
 	private:
 
-		virtual bool internal_Load(std::string path, Resource& r, DataContainer _data) = 0;
-		virtual void internal_unload(Resource& r) = 0;
+		virtual bool internal_Load(void** out, DataContainer in ) = 0;
+		virtual void internal_unload(void** data) = 0;
 
 	public:
 		virtual ~ResourceLoader();
@@ -27,7 +27,7 @@ namespace trr
 			Will check hash reference count before and after loading 
 			in order to counter chained loading and unloading.
 		*/
-		bool Load(std::string path, Resource& r, DataContainer _data);
+		bool Load(Resource& r, DataContainer _data);
 
 		/*
 			Loopthrough function for the asynchronous interface.
@@ -44,8 +44,7 @@ namespace trr
 		virtual const std::string GetExtension() = 0;
 
 		/**/
-		static void SetAllocator(PoolAllocator* allocator)
-		{ ResourceLoader::m_pAllocator = allocator;	}
+		static void SetAllocator(PoolAllocator* allocator)	{ ResourceLoader::m_pAllocator = allocator;	}
 
 	private:
 

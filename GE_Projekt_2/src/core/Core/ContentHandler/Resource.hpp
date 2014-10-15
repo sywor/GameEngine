@@ -2,22 +2,52 @@
 #define RESOURCE_HPP
 
 #include <cstdint>
+#include <string>
 
 namespace trr
 {
-
-	struct Resource
+	enum RState
 	{
-		Resource()
-		: hash(-1), nrReferences(0), data(nullptr), loaderIndex(-1)
-		{}
-
-		std::uint64_t	hash;
-		unsigned int	nrReferences;
-		void*			data;
-		int				loaderIndex;
+		LOADING,
+		UNLOADING,
+		READY
 	};
 
+	class Resource
+	{
+	public:
+		Resource(std::uint64_t _hash = -1)
+		: hash(_hash), nrReferences(0), data(nullptr), loaderExtension("*"), state(LOADING)
+		{}
+
+	private:
+		void operator=(const Resource& r)
+		{
+			hash			= r.hash;
+			nrReferences	= r.nrReferences;
+			state			= r.state;
+			data			= r.data;
+			loaderExtension = r.loaderExtension;
+		}
+
+		template< int MemoryBlockSize, int sizeOfMemory, typename... LoadersDef >
+		friend class ResourceManager;
+		friend class ResourceLoader;
+
+	protected:
+		std::uint64_t		hash;
+		unsigned int		nrReferences;
+		RState				state;
+		void*				data;
+		std::string			loaderExtension;
+
+	public:
+		const unsigned int	getReferences() const { return nrReferences; }
+		const void*			getData()		const { return data; }
+		const std::string	getExtension()	const { return loaderExtension; }
+		const std::uint64_t	getHash()		const { return hash; }
+		const RState		getState()		const { return state; }
+	};
 }
 
 #endif

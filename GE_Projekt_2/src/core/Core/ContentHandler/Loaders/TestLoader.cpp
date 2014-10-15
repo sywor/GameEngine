@@ -1,5 +1,5 @@
 #include "TestLoader.hpp"
-
+#include <thread>
 
 
 namespace trr
@@ -13,14 +13,17 @@ namespace trr
 	{
 	}
 
-	bool TestLoader::internal_Load(std::string path, Resource& r, DataContainer _data)
+	bool TestLoader::internal_Load(void** out, DataContainer in)
 	{
-		char* test = _data.data;
+		*out = m_pAllocator->FlatAllocate(in.size);
+		std::memcpy(*out, in.data, in.size);
 
-		return false;
+		std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
+
+		return true;
 	}
 
-	void TestLoader::internal_unload(Resource& r)
+	void TestLoader::internal_unload(void** data)
 	{
 	}
 }

@@ -4,25 +4,25 @@
 namespace trr
 {
 
-	bool RawDataLoader::internal_Load(std::string path, Resource& r, DataContainer _data)
+	bool RawDataLoader::internal_Load(void** out, DataContainer in)
 	{
-		if (_data.data == nullptr)
+		if (in.data == nullptr)
 			return false;
 
-		r.data = m_pAllocator->allocate<char>(_data.size);
+		*out = m_pAllocator->allocate<char>(in.size);
 		
-		if (r.data == nullptr)
+		if (*out == nullptr)
 			return false;
 
 		return true;
 	}
 
-	void RawDataLoader::internal_unload(Resource& r)
+	void RawDataLoader::internal_unload(void** data)
 	{
-		if (r.data)
+		if (*data)
 		{
-			m_pAllocator->deallocate(r.data);
-			r.data = nullptr;
+			m_pAllocator->deallocate(data);
+			data = nullptr;
 		}
 	}
 }

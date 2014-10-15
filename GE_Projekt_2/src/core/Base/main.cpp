@@ -46,9 +46,9 @@ int main( int argc, char* argv[] )
 	trr::contentManager.InitContentLib(s2ws("test.zip"));
 
 
-	trr::contentManager.GetResource("test.txt.test", [ &flag ]( void* data )
+	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
 	{
-		static std::mutex tex;
+		LOG_DEBUG << "callback running" << std::endl;
 		char code[10];
 		std::memcpy( code, data, 10 );
 		LOG_DEBUG << "callback: " << code << std::endl;
@@ -59,6 +59,7 @@ int main( int argc, char* argv[] )
 		flag = 1;
 	});
 
+	trr::contentManager.GetResource( "test.txt.test" );
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	
@@ -69,7 +70,7 @@ int main( int argc, char* argv[] )
 	//trr::contentManager.Unload(r.hash);
 	//trr::contentManager.Unload(rr.hash);
 		
-	while (flag == 0)
+	//while (flag == 0)
 	{
 		// empty
 	}
