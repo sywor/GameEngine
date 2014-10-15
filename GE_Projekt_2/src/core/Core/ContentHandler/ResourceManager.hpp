@@ -227,8 +227,8 @@ namespace trr
 		}
 
 		/*
-		Attempts to load asset and call the supplied function once loaded.
-		data-pointer is pointer of the result container associated with the sough loader.
+			Attempts to load asset and call the supplied function once loaded.
+			data-pointer is pointer of the result container associated with the sough loader.
 		*/
 		void GetResource(std::string path, std::function<void(void* data)> callback)
 		{
@@ -271,7 +271,9 @@ namespace trr
 			{
 				Resource& r = assetList[handle];
 
-				if (r.loaderIndex < loaders.size())	// find associated (un)loader --- this is a potential problem if we unmount loaders during runtime Resource should probably contain extension as well
+				// find associated (un)loader --- this is a potential problem if we unmount 
+				//        loaders during runtime Resource should probably contain extension as well
+				if (r.loaderIndex < loaders.size())
 				{
 					if (--r.nrReferences <= 0)
 					{
@@ -342,7 +344,6 @@ namespace trr
 #endif
 
 
-// TO DO: Add threadpool to the content manager
 // TO DO: Add function for stalling/resuming the work queue in the threadpool
 // TO DO: Add mutexes to respective position to secure the manager
 // TO DO: Implement insertSort of hashes to assetList
