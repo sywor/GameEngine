@@ -100,10 +100,12 @@ namespace trr
 			assetRef = assetList[ hash ];
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 
+			/*
 			LOG_DEBUG << assetRef.hash << std::endl;
 			LOG_DEBUG << assetRef.loaderExtension << std::endl;
 			LOG_DEBUG << assetRef.nrReferences << std::endl;
 			LOG_DEBUG << assetRef.data << std::endl;
+			*/
 
 			for (int i = 0; i < callbackList.size(); i++)
 			{
@@ -117,6 +119,109 @@ namespace trr
 
 					callbackList.erase( callbackList.begin() + i );
 					i--;
+				}
+			}
+		}
+
+		void SetAssetState( std::uint64_t hash, RState state )
+		{
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			assetList[ hash ].state = state;
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+		}
+
+		bool LoadResource(std::string path)
+		{
+			std::uint64_t hash = MakeHash( path.data(), path.length() );
+			
+			// resource existance is guaranteed by caller
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			Resource assetRef = assetList[hash];
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+
+			// find compatible loader to new resource
+			std::size_t sep = path.find_last_of(".");
+			std::string fileName = path.substr(0, sep);
+			const std::string ext = path.substr(sep + 1);
+
+			if (loaders.find(ext) != loaders.end())
+			{
+				ENTER_CRITICAL_SECTION_ZLIB;
+				int zipId = contentZipFile.Find(fileName);
+				bool zipReadResult = false;
+				DataContainer rawData;
+
+				if (zipId != -1)
+				{
+					int fileLength = contentZipFile.GetFileLen(zipId);
+					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
+				}
+				EXIT_CRITICAL_SECTION_ZLIB;
+
+				if (zipReadResult && loaders[ext]->Load(assetRef, rawData))
+				{
+					assetRef.loaderExtension = ext;
+					assetRef.path = path;
+					assetRef.state = RState::READY;
+					ENTER_CRITICAL_SECTION_ASSETLIST;
+					assetList[hash] = assetRef;
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+				}
+				contentAllocator.deallocate(rawData.data);
+			}
+
+			return assetRef.state == RState::READY ? true : false;
+		}
+
+		void UnloadResource( std::uint64_t hash )
+		{
+			Resource res;
+
+			// decrease reference count
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			if ( assetList.find(hash) != assetList.end() )
+			{
+				res = assetList[hash];
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+
+			if( res.getReferences() == 0 && res.getState() != RState::LOADING )
+			{
+				// resource is loaded but has no references
+				// queue call to remove resource
+				if (loaders.find( res.getExtension() ) != loaders.end())
+				{
+					ENTER_CRITICAL_SECTION_ASSETLIST;
+					assetList[hash].state = RState::UNLOADING;
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+						
+					workPool.Enqueue( [ this, res, hash ]()
+					{
+						LOG_DEBUG << "unloading resource" << std::endl;
+						loaders[ res.getExtension() ]->Unload( (Resource&)res );
+						ENTER_CRITICAL_SECTION_ASSETLIST;
+						int nrRefs = assetList[hash].getReferences();
+						if( nrRefs <= 0 )
+						{
+							assetList.erase( hash );
+						}
+						EXIT_CRITICAL_SECTION_ASSETLIST;
+
+						// the resource has been loaded while this function was loading
+						// add load call to queue
+						if( nrRefs > 0 )
+						{
+							SetAssetState( hash, RState::LOADING );
+
+							workPool.Enqueue( [ this, res, hash ]()
+							{
+								LOG_DEBUG << "reloading resource" << std::endl;
+								LoadResource( res.getPath() );
+								OnAsyncLoadFinish( hash );
+							});
+						}
+					});
 				}
 			}
 		}
@@ -161,49 +266,6 @@ namespace trr
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// content interface
-
-		bool LoadResource(std::string path)
-		{
-			std::uint64_t hash = MakeHash( path.data(), path.length() );
-			
-			// resource existance is guaranteed by caller
-			ENTER_CRITICAL_SECTION_ASSETLIST;
-			Resource assetRef = assetList[hash];
-			EXIT_CRITICAL_SECTION_ASSETLIST;
-
-			// find compatible loader to new resource
-			std::size_t sep = path.find_last_of(".");
-			std::string fileName = path.substr(0, sep);
-			const std::string ext = path.substr(sep + 1);
-
-			if (loaders.find(ext) != loaders.end())
-			{
-				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
-				bool zipReadResult = false;
-				DataContainer rawData;
-
-				if (zipId != -1)
-				{
-					int fileLength = contentZipFile.GetFileLen(zipId);
-					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
-				}
-				EXIT_CRITICAL_SECTION_ZLIB;
-
-				if (zipReadResult && loaders[ext]->Load(assetRef, rawData))
-				{
-					assetRef.loaderExtension = ext;
-					assetRef.state = RState::READY;
-					ENTER_CRITICAL_SECTION_ASSETLIST;
-					assetList[hash] = assetRef;
-					EXIT_CRITICAL_SECTION_ASSETLIST;
-				}
-				contentAllocator.deallocate(rawData.data);
-			}
-
-			return assetRef.state == RState::READY ? true : false;
-		}
 
 		/*
 			Attempts to load asset and returns void* to 
@@ -270,12 +332,17 @@ namespace trr
 					});
 					return;
 				}
+				else
+				{
+					callbackList.push_back(CallbackContainer(hash, callback));
+					return;
+				}
 			}
 			else
 			{
 				assetList[hash] = assetRef;
+				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
-			EXIT_CRITICAL_SECTION_ASSETLIST;
 
 			callbackList.push_back(CallbackContainer(hash, callback));
 
@@ -285,7 +352,28 @@ namespace trr
 				if ( LoadResource(path) )
 				{
 					LOG_DEBUG << "finished loading hash: " << hash << std::endl;
-					OnAsyncLoadFinish(hash);
+
+					// check if asset was unloaded while resource was being loaded
+					ENTER_CRITICAL_SECTION_ASSETLIST;
+					int nrRefs = assetList[hash].getReferences();
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+					if( nrRefs <= 0 )
+					{
+						ENTER_CRITICAL_SECTION_ASSETLIST;
+						assetList[hash].state = RState::UNLOADING;
+						EXIT_CRITICAL_SECTION_ASSETLIST;
+
+						workPool.Enqueue( [ this, hash ]()
+						{
+							LOG_DEBUG << "unloading depricated resource" << std::endl;
+							UnloadResource( hash );
+						});
+																				// TO DO: empty callbacks relating to this asset?
+					}
+					else
+					{
+						OnAsyncLoadFinish( hash );
+					}
 				}	
 				else
 				{
@@ -296,54 +384,37 @@ namespace trr
 
 
 		/*
+			Loop thorugh function for Unload( std::uint64_t ) using path
+			as parameter.
+		*/
+		void Unload( std::string path )
+		{
+			std::uint64_t hash = MakeHash(path.data(), path.length());
+			Unload( hash );
+		}
+
+		/*
 			Will decrease the referense counter of the supplied hash
 			and add job to unload should the number of referenses reach zero.
 		*/
-		void Unload( std::uint64_t handle )
+		void Unload( std::uint64_t hash )
 		{
-			/*
-			Resource* toUnload = nullptr;
+			Resource res;
 
+			// decrease reference count
 			ENTER_CRITICAL_SECTION_ASSETLIST;
-			if (assetList.find(handle) != assetList.end())
+			if (assetList.find(hash) != assetList.end())
 			{
-				Resource& r = assetList[handle];
-
-<<<<<<< HEAD
-				// find associated (un)loader --- this is a potential problem if we unmount 
-				//        loaders during runtime Resource should probably contain extension as well
-				if (r.loaderIndex < loaders.size())
-				{
-					if (--r.nrReferences <= 0)
-					{
-						toUnload = &r;
-=======
-				if (loaders.find(r.getExtension()) != loaders.end())
-				{
-					if (--r.nrReferences <= 0)
-					{
-						loaders[r.getExtension()]->Unload(r);
-						assetList.erase(handle);
->>>>>>> master
-					}
-				}
-				else 
-				{
-					// the loaders have been tampered with!
-					// we can't deallocate the data properly
-				}
+				assetList[hash].nrReferences--;
+				res = assetList[hash];
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 
-			if ( toUnload )
+			// check if eligable resource was found
+			if( res.getHash() != std::uint64_t( -1 ) )
 			{
-				loaders[ toUnload->loaderIndex ]->Unload( *toUnload );
-				
-				ENTER_CRITICAL_SECTION_ASSETLIST;
-				assetList.erase(handle);
-				EXIT_CRITICAL_SECTION_ASSETLIST;
+				UnloadResource( hash );
 			}
-			*/
 		}
 
 		/*
@@ -393,8 +464,6 @@ namespace trr
 
 // TO DO: Add function for stalling/resuming the work queue in the threadpool
 // TO DO: Add mutexes to respective position to secure the manager
-// TO DO: Implement insertSort of hashes to assetList
-// TO DO: Implement binary search for hash in assetList 
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
 
