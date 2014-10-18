@@ -73,6 +73,11 @@ struct AllocationManager
 
 void doAllocByThePool(AllocationManager *settings, int _framesToRun);
 
+struct FrameData
+{
+	unsigned int lifeTime;
+	littleFunc*	data;
+};
 /* requriements: 
 	1) single frame lifetime
 	2) same or similiar sizes of objects 
@@ -85,46 +90,51 @@ void stackScen1(AllocationManager *settings, int _framesToRun)
 	if (!sa.init(settings->allocatorSize))
 		return;
 
-	uint numAllocsPerFrame = settings->allocationsPerFrameMin;
-	settings->NrOfAlocations = numAllocsPerFrame * _framesToRun;
-
 	/* Run by alloted number of frames */
 	for (int i = 0; i < _framesToRun; ++i)
 	{
+		int numAllocsPerFrame = settings->allocationsPerFrameMin + ((rand() % settings->allocationsPerFrameMax) - settings->allocationsPerFrameMin);
+		settings->NrOfAlocations += numAllocsPerFrame;
 		/* Allocate objects */
+		
+		int liveThroughFrame;
+		if ((rand() % 5) == 0)
+			liveThroughFrame = rand() % (settings->allocationsPerFrameMax - settings->allocationsPerFrameMin) + settings->allocationsPerFrameMin;
+		else
+			liveThroughFrame = settings->allocationsPerFrameMin;
+		//printf("lifeTime:%i\n", liveThroughFrame);
+
 		settings->allocationTimer.start();
 		for (int i = 0; i < numAllocsPerFrame; ++i)
 		{
-			int size = (rand() % 6);
+			int size = (rand() % 5);
 
 			switch (size)
 			{
 			case 0:
-				list.push_back(sa.allocate<littleFunc>(i, 1));
+				list.push_back(sa.allocate<littleFunc>(i, size));
 				break;
 			case 1:
-				list.push_back(sa.allocate<funky1>(i, 1));
+				list.push_back(sa.allocate<funky1>(i, size));
 				break;
 			case 2:
-				list.push_back(sa.allocate<funky2>(i, 1));
+				list.push_back(sa.allocate<funky2>(i, size));
 				break;
 			case 3:
-				list.push_back(sa.allocate<funky3>(i, 1));
+				list.push_back(sa.allocate<funky3>(i, size));
 				break;
 			case 4:
-				list.push_back(sa.allocate<funky4>(i, 1));
+			default:
+				list.push_back(sa.allocate<funky4>(i, size));
 				break;
-			case 5:
-				list.push_back(sa.allocate<bigFunc>(i, 1));
-				break;
-			}
+			}		
 		}
 		settings->allocationTimer.end();
 		settings->TotalAllocationTime += settings->allocationTimer.getTimeElapsed();
 
 		// deallocate all objects by fifo
 		settings->deallocationTimer.start();
-		while (!list.empty())
+		while (list.size() > liveThroughFrame)
 		{
 			sa.deallocate(list[list.size() - 1]);
 			list.pop_back();
@@ -138,25 +148,43 @@ void stackScen1(AllocationManager *settings, int _framesToRun)
 	1) single frame lifetime 
 	2) same sized objects 
 	notes: whatever data type you want */
-template<typename Allocator, typename DataStruct>
+template<typename Allocator>
 void stackScen2(AllocationManager *settings, int _framesToRun)
 {
-	std::vector<DataStruct*> list;	// list of datastruct to test
+	std::vector<littleFunc*> list;	// list of datastruct to test
 	Allocator sa;					// the allocator to test
 	if (!sa.init(settings->allocatorSize))
 		return;
 
-	uint numAllocsPerFrame	= settings->allocationsPerFrameMin;
-	settings->NrOfAlocations= numAllocsPerFrame * _framesToRun;
-	
 	/* Run by alloted number of frames */
 	for (int i = 0; i < _framesToRun; ++i)
 	{	
+		int numAllocsPerFrame	= settings->allocationsPerFrameMin + ((rand() % settings->allocationsPerFrameMax) - settings->allocationsPerFrameMin);
+		settings->NrOfAlocations += numAllocsPerFrame;
 		/* Allocate objects */
 		settings->allocationTimer.start();
 		for (int i = 0; i < numAllocsPerFrame; ++i)
 		{
-			list.push_back(sa.allocate<DataStruct>(i, 1));
+			int size = (rand() % 5);
+			switch (size)
+			{
+			case 0:
+				list.push_back(sa.allocate<littleFunc>(i, size));
+				break;
+			case 1:
+				list.push_back(sa.allocate<funky1>(i, size));
+				break;
+			case 2:
+				list.push_back(sa.allocate<funky2>(i, size));
+				break;
+			case 3:
+				list.push_back(sa.allocate<funky3>(i, size));
+				break;
+			case 4:
+			default:
+				list.push_back(sa.allocate<funky4>(i, size));
+				break;
+			}
 		}
 		settings->allocationTimer.end();
 		settings->TotalAllocationTime += settings->allocationTimer.getTimeElapsed();

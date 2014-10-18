@@ -42,7 +42,11 @@ public:
 #endif
 		uint32_t dat = (uint32_t)data + size;
 		if ((marker + sizeof(T)) > end)
-			return nullptr;
+		{
+			assert("outside mem bound");
+				return nullptr;
+		}
+			
 
 		return reinterpret_cast<T*>(new(FlatAllocate(sizeof(T)))T(args...));
 	}
@@ -53,9 +57,9 @@ public:
 		uint32_t objAddr = (uint32_t)obj;
 
 		// the object we're trying to remove is not the head
-		assert((uint32_t)obj == (marker)-sizeof(T));
+		//assert((uint32_t)obj == (marker)-sizeof(T));
 		
-		obj->~T();
+		//obj->~T();
 		obj	= nullptr;
 		marker	= objAddr;
 	}
