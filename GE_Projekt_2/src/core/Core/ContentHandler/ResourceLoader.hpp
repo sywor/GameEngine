@@ -17,7 +17,7 @@ namespace trr
 	private:
 
 		virtual void* internal_Load( DataContainer in ) = 0;
-		virtual void internal_unload(void** data) = 0;
+		virtual void internal_unload( void* data) = 0;
 
 	public:
 		virtual ~ResourceLoader();
@@ -34,7 +34,7 @@ namespace trr
 			Will check hash reference count before and after loading 
 			in order to counter chained loading and unloading.
 		*/
-		void Unload(Resource& r);
+		void Unload( void* data );
 
 		/*
 			Get the file extension associated with a particular

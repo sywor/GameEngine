@@ -62,6 +62,15 @@ int main( int argc, char* argv[] )
 		flag = 1;
 	});
 
+
+	LOG_DEBUG << "main thread continues" << std::endl;
+	
+
+	while (flag == 0);
+	flag = 0;
+
+	trr::contentManager.Unload( "test.txt.test", []( const void* data ){} );
+
 	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
 	{
 		/*
@@ -78,8 +87,7 @@ int main( int argc, char* argv[] )
 		flag = 1;
 	});
 
-	LOG_DEBUG << "main thread continues" << std::endl;
-	
+	trr::contentManager.Unload( "test.txt.test", []( const void* data ){} );
 
 	while (flag == 0);
 

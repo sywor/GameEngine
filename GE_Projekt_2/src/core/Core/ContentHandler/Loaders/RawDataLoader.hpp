@@ -10,7 +10,7 @@ namespace trr
 	{
 	private:
 		void* internal_Load( DataContainer in ) final;
-		void internal_unload(void** data) final;
+		void internal_unload( void* data ) final;
 	protected:
 	public:
 

@@ -12,7 +12,7 @@ namespace trr
 	private:
 
 		virtual void* internal_Load( DataContainer in)			override;
-		virtual void internal_unload(void** data)				override;
+		virtual void internal_unload( void* data )				override;
 
 	public:
 		TestLoader();

@@ -17,9 +17,9 @@ namespace trr
 		return out;
 	}
 
-	void RawDataLoader::internal_unload(void** data)
+	void RawDataLoader::internal_unload( void* data )
 	{
-		if (*data)
+		if (data)
 		{
 			m_pAllocator->deallocate(data);
 			data = nullptr;

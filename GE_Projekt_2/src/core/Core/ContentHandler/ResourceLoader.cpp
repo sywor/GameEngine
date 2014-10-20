@@ -17,9 +17,9 @@ namespace trr
 	}
 
 		
-	void ResourceLoader::Unload(Resource& r)
+	void ResourceLoader::Unload( void* data )
 	{
-		internal_unload( &r.data );
+		internal_unload( data );
 	}
 
 

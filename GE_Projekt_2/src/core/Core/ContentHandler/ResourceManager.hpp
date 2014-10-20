@@ -126,11 +126,22 @@ namespace trr
 					assetRef.path	= path;
 					assetRef.state	= RState::READY;
 					assetRef.data	= data;
-					assetList[hash]	= assetRef;
 					assetRef.loaderExtension = ext;
-					EXIT_CRITICAL_SECTION_ASSETLIST;
 
-					RunCallbacks( hash, data );
+					// check if unloaded while loading
+					if( assetRef.nrReferences == 0 )
+					{
+						workPool.Enqueue( [ hash ]()
+						{
+							UnloadResource( hash );
+						});
+					}
+					else
+					{
+						assetList[hash]	= assetRef;
+						RunCallbacks( hash, data );
+					}
+					EXIT_CRITICAL_SECTION_ASSETLIST;
 				}
 				contentAllocator.deallocate(rawData.data);
 			}
@@ -138,7 +149,6 @@ namespace trr
 
 		void RunCallbacks( std::uint64_t hash, void* data )
 		{
-			ENTER_CRITICAL_SECTION_GENERAL;
 			for( int i = 0; i < callbackList.size(); i++ )
 			{
 				if( callbackList[ i ].hash == hash )
@@ -148,14 +158,48 @@ namespace trr
 					{
 						func( data );
 					});
+					callbackList.erase( callbackList.begin() + i );
+					i--;
 				}
 			}
-			EXIT_CRITICAL_SECTION_GENERAL;
 		}
 
-		void UnloadResource( std::uint64_t hash )
+		void VolotileSetAssetState( std::uint64_t hash, RState state )
 		{
-			
+			assetList[ hash ].state = state;
+		}
+
+		void UnloadResource( std::uint64_t hash, std::string extension )
+		{
+			if( loaders.find( extension ) != loaders.end() )
+			{						
+				workPool.Enqueue( [ this, extension, hash ]()
+				{
+					LOG_DEBUG << "unloading resource" << std::endl;
+					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
+					
+					ENTER_CRITICAL_SECTION_ASSETLIST;
+					// the resource has been loaded while this function was loading
+					// add load call to queue
+					unsigned int nrRefs = assetList[hash].getReferences();
+					if( nrRefs > 0 )
+					{
+						VolotileSetAssetState( hash, RState::LOADING );
+						std::string path = assetList[ hash ].getPath();
+						workPool.Enqueue( [ this, hash, path ]()
+						{
+							LOG_DEBUG << "reloading resource" << std::endl;
+							LoadResource( path );
+						});
+					}
+					else
+					{
+						assetList.erase( hash );
+					}
+
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+				});
+			}
 		}
 
 	public: 
@@ -219,7 +263,7 @@ namespace trr
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			
 			ENTER_CRITICAL_SECTION_ASSETLIST;
-			if( assetList.find( hash ) != assetList.end() )
+			if( assetList.find( hash ) == assetList.end() )
 			{
 				// if asset is not existing, add it to the queue
 				Resource res( hash );
@@ -269,12 +313,13 @@ namespace trr
 			if( assetList.find( hash ) != assetList.end() )
 			{
 				assetList[ hash ].nrReferences--;
-				if( assetList[ hash ].nrReferences == 0 )
+				if( assetList[ hash ].nrReferences == 0 && assetList[ hash ].state == RState::READY )
 				{
 					assetList[ hash ].state = RState::UNLOADING;
-					workPool.Enqueue( [ this, hash ]()
+					std::string extension = assetList[ hash ].loaderExtension;
+					workPool.Enqueue( [ this, hash, extension ]()
 					{
-						UnloadResource( hash );
+						UnloadResource( hash, extension );
 					});
 				}
 			}
