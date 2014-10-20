@@ -13,14 +13,14 @@ namespace trr
 	{
 	}
 
-	bool TestLoader::internal_Load(void** out, DataContainer in)
+	void* TestLoader::internal_Load( DataContainer in)
 	{
-		*out = m_pAllocator->FlatAllocate(in.size);
-		std::memcpy(*out, in.data, in.size);
+		void* out = m_pAllocator->FlatAllocate(in.size);
+		std::memcpy( out, in.data, in.size);
 
 		std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
 
-		return true;
+		return out;
 	}
 
 	void TestLoader::internal_unload(void** data)

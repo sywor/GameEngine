@@ -92,11 +92,63 @@ namespace trr
 		{
 			return MurmurHash64(key, len, 42);
 		}
-
 		
-		bool LoadResource(std::string path)
+		void LoadResource( std::string path )
 		{
-			
+			std::uint64_t hash = MakeHash( path.data(), path.length() );
+
+			// find compatible loader to new resource
+			std::size_t sep = path.find_last_of(".");
+			std::string fileName = path.substr(0, sep);
+			const std::string ext = path.substr(sep + 1);
+
+			if (loaders.find(ext) != loaders.end())
+			{
+				ENTER_CRITICAL_SECTION_ZLIB;
+				int zipId = contentZipFile.Find(fileName);
+				bool zipReadResult = false;
+				DataContainer rawData;
+
+				if (zipId != -1)
+				{
+					int fileLength = contentZipFile.GetFileLen(zipId);
+					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
+				}
+				EXIT_CRITICAL_SECTION_ZLIB;
+
+				void* data = nullptr;
+				if (zipReadResult && (data = loaders[ext]->Load( rawData )) != nullptr )
+				{
+					// resource existance is guaranteed by caller
+					ENTER_CRITICAL_SECTION_ASSETLIST;
+					Resource assetRef = assetList[hash];
+					assetRef.path	= path;
+					assetRef.state	= RState::READY;
+					assetRef.data	= data;
+					assetList[hash]	= assetRef;
+					assetRef.loaderExtension = ext;
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+
+					RunCallbacks( hash, data );
+				}
+				contentAllocator.deallocate(rawData.data);
+			}
+		}
+
+		void RunCallbacks( std::uint64_t hash, void* data )
+		{
+			for( int i = 0; i < callbackList.size(); i++ )
+			{
+				if( callbackList[ i ].hash == hash )
+				{
+					std::function< void( void* ) > func = callbackList[ i ].callback;
+					workPool.Enqueue( [ func, data ]()
+					{
+						func( data );
+					});
+				}
+			}
 		}
 
 		void UnloadResource( std::uint64_t hash )
@@ -145,23 +197,7 @@ namespace trr
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// content interface
 
-		const Resource IncreaseAssetRef( std::uint64_t hash )
-		{
-			ENTER_CRITICAL_SECTION_ASSETLIST;
-
-			// if asset is not existing, add it to the list
-			if( assetList.find( hash ) != assetList.end() )
-			{
-				Resource res( hash );
-				res.state = RState::WAITING_LOAD;
-				assetList[ hash ] = res;
-			}
-
-			assetList[ hash ].nrReferences++;
-			EXIT_CRITICAL_SECTION_ASSETLIST;
-
-			return assetList[ hash ];
-		}
+	
 
 		/*
 			Attempts to load asset and returns void* to 
@@ -178,7 +214,7 @@ namespace trr
 		*/
 		void GetResource(std::string path, std::function<void(const void* data)> callback)
 		{
-			std::uint64_t hash = MakeHash( path );
+			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			
 			ENTER_CRITICAL_SECTION_ASSETLIST;
 			if( assetList.find( hash ) != assetList.end() )
@@ -186,7 +222,8 @@ namespace trr
 				// if asset is not existing, add it to the queue
 				Resource res( hash );
 				assetList[ hash ] = res;
-				workPool.Enqueue( []()
+				callbackList.push_back( CallbackContainer( hash, callback ));
+				workPool.Enqueue( [ this, path ]()
 				{
 					LoadResource( path );
 				});
@@ -194,19 +231,18 @@ namespace trr
 			else if( assetList[ hash ].state != RState::READY )
 			{
 				// add callback to list
-				assetList[ hash ].nrReferences++;
 				callbackList.push_back( CallbackContainer( hash, callback ));
 			}
 			else
 			{
 				// add callback to queue
-				assetList[ hash ].nrReferences++;
 				void* data = assetList[ hash ].data;
 				workPool.Enqueue( [ callback, data ]()
 				{
 					callback( data );
 				});
 			}
+			assetList[ hash ].nrReferences++;
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 		}
 

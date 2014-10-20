@@ -9,7 +9,7 @@ namespace trr
 		: public ResourceLoader
 	{
 	private:
-		bool internal_Load(void** out, DataContainer in ) final;
+		void* internal_Load( DataContainer in ) final;
 		void internal_unload(void** data) final;
 	protected:
 	public:

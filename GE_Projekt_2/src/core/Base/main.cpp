@@ -62,12 +62,26 @@ int main( int argc, char* argv[] )
 		flag = 1;
 	});
 
+	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
+	{
+		/*
+		LOG_DEBUG << "callback running" << std::endl;
+		char code[10];
+		std::memcpy( code, data, 10 );
+		LOG_DEBUG << "callback: " << code << std::endl;
+
+		trr::Entity ent = trr::entityHandler.CreateEntity();
+		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
+
+		*/
+
+		flag = 1;
+	});
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	
 
 	while (flag == 0);
-
 
 	int breakpoint = 0;
 

@@ -4,17 +4,17 @@
 namespace trr
 {
 
-	bool RawDataLoader::internal_Load(void** out, DataContainer in)
+	void* RawDataLoader::internal_Load( DataContainer in)
 	{
 		if (in.data == nullptr)
-			return false;
+			return nullptr;
 
-		*out = m_pAllocator->allocate<char>(in.size);
+		void* out = m_pAllocator->allocate<char>(in.size);
 		
-		if (*out == nullptr)
-			return false;
+		if (out == nullptr)
+			return nullptr;
 
-		return true;
+		return out;
 	}
 
 	void RawDataLoader::internal_unload(void** data)

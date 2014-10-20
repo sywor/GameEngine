@@ -16,7 +16,7 @@ namespace trr
 	{
 	private:
 
-		virtual bool internal_Load(void** out, DataContainer in ) = 0;
+		virtual void* internal_Load( DataContainer in ) = 0;
 		virtual void internal_unload(void** data) = 0;
 
 	public:
@@ -27,7 +27,7 @@ namespace trr
 			Will check hash reference count before and after loading 
 			in order to counter chained loading and unloading.
 		*/
-		bool Load(Resource& r, DataContainer _data);
+		void* Load( DataContainer _data);
 
 		/*
 			Loopthrough function for the asynchronous interface.
