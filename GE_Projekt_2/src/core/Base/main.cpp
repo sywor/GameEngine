@@ -62,43 +62,12 @@ int main( int argc, char* argv[] )
 		flag = 1;
 	});
 
-	//trr::contentManager.GetResource( "test.txt.test" );
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	
 
-	//trr::contentManager.InitContentLib(s2ws("C:/temp/GameEngine/GE_Projekt_2/test.zip"));
-	//trr::Resource r = trr::contentManager.GetResource("test.txt.test");
-	//trr::Resource rr = trr::contentManager.GetResource("test.txt.test");
-	//
-	//trr::contentManager.Unload(r.hash);
-	//trr::contentManager.Unload(rr.hash);
-		
 	while (flag == 0);
 
-	flag = 0;
-	
-
-	trr::contentManager.Unload( "test.txt.test" );
-
-	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
-	{
-		/*
-		LOG_DEBUG << "callback running" << std::endl;
-		char code[10];
-		std::memcpy( code, data, 10 );
-		LOG_DEBUG << "callback: " << code << std::endl;
-
-		trr::Entity ent = trr::entityHandler.CreateEntity();
-		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
-
-		*/
-
-		flag = 1;
-	});
-
-
-	while (flag == 0);
 
 	int breakpoint = 0;
 

@@ -17,7 +17,7 @@ namespace trr
 	{
 	public:
 		Resource(std::uint64_t _hash = -1)
-		: hash(_hash), nrReferences(1), data(nullptr), loaderExtension("*"), state(LOADING), path("")
+		: hash(_hash), nrReferences(0), data(nullptr), loaderExtension("*"), state(LOADING), path("")
 		{}
 
 	private:
