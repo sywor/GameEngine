@@ -138,6 +138,7 @@ namespace trr
 
 		void RunCallbacks( std::uint64_t hash, void* data )
 		{
+			ENTER_CRITICAL_SECTION_GENERAL;
 			for( int i = 0; i < callbackList.size(); i++ )
 			{
 				if( callbackList[ i ].hash == hash )
@@ -149,6 +150,7 @@ namespace trr
 					});
 				}
 			}
+			EXIT_CRITICAL_SECTION_GENERAL;
 		}
 
 		void UnloadResource( std::uint64_t hash )
@@ -263,7 +265,20 @@ namespace trr
 		*/
 		void Unload( std::uint64_t hash, std::function<void(const void* data)> callback )
 		{
-			
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			if( assetList.find( hash ) != assetList.end() )
+			{
+				assetList[ hash ].nrReferences--;
+				if( assetList[ hash ].nrReferences == 0 )
+				{
+					assetList[ hash ].state = RState::UNLOADING;
+					workPool.Enqueue( [ this, hash ]()
+					{
+						UnloadResource( hash );
+					});
+				}
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
 		}
 
 
