@@ -175,7 +175,6 @@ namespace trr
 			{						
 				workPool.Enqueue( [ this, extension, hash ]()
 				{
-					LOG_DEBUG << "unloading resource with extension " << extension << std::endl;
 					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
 					ENTER_CRITICAL_SECTION_ASSETLIST;
 					// the resource has been loaded while this function was loading
@@ -183,18 +182,15 @@ namespace trr
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
-						LOG_DEBUG << "there are references to unloaded object" << std::endl;
 						VolotileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
 						{
-							LOG_DEBUG << "reloading resource" << std::endl;
 							LoadResource( path );
 						});
 					}
 					else
 					{
-						LOG_DEBUG << "there are no references to unloaded object" << std::endl;
 						assetList.erase( hash );
 					}
 
@@ -220,6 +216,7 @@ namespace trr
 				return; // Should improve error handling / author
 			#endif
 
+			inOutStalled = false;
 			workPool.Initialize( 2 );
 			ResourceLoader::SetAllocator(&contentAllocator);
 			InitializeArrayWithNew< LoadersDef... >( &loaders, &contentAllocator );
@@ -261,7 +258,6 @@ namespace trr
 		*/
 		void GetResource(std::string path, std::function<void(const void* data)> callback)
 		{
-			LOG_DEBUG << "aquiring asset" << std::endl;
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			
 			ENTER_CRITICAL_SECTION_ASSETLIST;
@@ -271,10 +267,18 @@ namespace trr
 				Resource res( hash );
 				assetList[ hash ] = res;
 				callbackList.push_back( CallbackContainer( hash, callback ));
-				workPool.Enqueue( [ this, path ]()
+				if( !inOutStalled )
 				{
-					LoadResource( path );
-				});
+					workPool.Enqueue( [ this, path ]()
+					{
+						LoadResource( path );
+					});
+				}
+				else
+				{
+					assetList[ hash ].state = RState::WAITING_LOAD;
+					assetList[ hash ].path	= path;
+				}
 			}
 			else if( assetList[ hash ].state != RState::READY )
 			{
@@ -317,12 +321,15 @@ namespace trr
 				assetList[ hash ].nrReferences--;
 				if( assetList[ hash ].nrReferences == 0 && assetList[ hash ].state == RState::READY )
 				{
-					assetList[ hash ].state = RState::UNLOADING;
-					std::string extension = assetList[ hash ].loaderExtension;					
-					workPool.Enqueue( [ this, hash, extension ]()
+					if( !inOutStalled )
 					{
-						UnloadResource( hash, extension );
-					});
+						assetList[ hash ].state = RState::UNLOADING;
+						std::string extension = assetList[ hash ].loaderExtension;					
+						workPool.Enqueue( [ this, hash, extension ]()
+						{
+							UnloadResource( hash, extension );
+						});
+					}
 				}
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
@@ -340,23 +347,64 @@ namespace trr
 				- call GetResources( path, function ) for all the new content.
 				- resume loading by calling RunLoading().
 		*/
-		void StallLoading();
+		void StallLoading()
+		{
+			ENTER_CRITICAL_SECTION_GENERAL;
+			inOutStalled = true;
+			EXIT_CRITICAL_SECTION_GENERAL;
+		}
 		
 		/*
 			Will move all ingoing jobs to the work queue.
 			See StallLoading for more info.
 		*/
-		void RunLoading();
+		void RunLoading()
+		{
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			inOutStalled = true;
+			for( auto res = assetList.begin(); res != assetList.end(); res++ )
+			{
+				if( res->second.nrReferences == 0 )
+				{
+					if( res->second.state == RState::READY )
+					{
+						std::string path = res->second.getPath();
+						LOG_DEBUG << "unloading " << path << std::endl;
+
+						assetList[ res->second.hash ].state = RState::UNLOADING;
+						std::string extension = assetList[ res->second.hash ].loaderExtension;					
+						std::uint64_t hash = res->second.hash;
+						workPool.Enqueue( [ this, hash, extension, path ]()
+						{
+							UnloadResource( hash, extension );
+						});
+					}
+				}
+				else if( res->second.state == RState::WAITING_LOAD )
+				{
+					std::string path = res->second.getPath();
+					LOG_DEBUG << "loading " << path << std::endl;
+					workPool.Enqueue( [ this, path ]()
+					{
+						LoadResource( path );
+					});
+				}
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+		}
 
 
 	private:
-		std::map<std::uint64_t, Resource>	assetList;
-		std::map<const std::string, ResourceLoader*>	loaders;
-		std::vector< CallbackContainer >	callbackList;
+		std::vector< CallbackContainer > callbackList;
+		std::map< std::uint64_t, Resource >	assetList;
+		std::map< const std::string, ResourceLoader* >	loaders;
+		
 
 		PoolAllocator	contentAllocator;
 		ZipFile			contentZipFile;
 		ThreadPool		workPool;
+
+		bool			inOutStalled;
 		
 
 #ifdef USE_CRITICAL_SECTION_LOCK

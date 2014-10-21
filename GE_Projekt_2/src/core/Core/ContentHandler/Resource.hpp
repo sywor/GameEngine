@@ -8,6 +8,7 @@ namespace trr
 {
 	enum RState
 	{
+		WAITING_LOAD,
 		LOADING,
 		UNLOADING,
 		READY

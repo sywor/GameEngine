@@ -33,19 +33,10 @@ std::string ws2s(const std::wstring& s)
 }
 
 
-
-
-int main( int argc, char* argv[] )
+void TestScenarioA()
 {
-	//trr::Level1 level;
-	//level.Init();
-	//ossianTest::zipTest();
 
 	int flag = 0;
-
-	trr::contentManager.InitContentLib(s2ws("test.zip"));
-
-	
 
 	// add a
 	trr::Entity a =  trr::entityHandler.CreateEntity();
@@ -102,14 +93,91 @@ int main( int argc, char* argv[] )
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	
-
 	while (flag == 0);
 	flag = 0;
+	int breakpoint = 0;
 
+	LOG_DEBUG << "TestA finished" << std::endl;
+
+}
+
+
+
+
+void TestB()
+{
+	int flag = 0;
+	trr::Entity temp;
+
+	std::vector< trr::Entity > entities;
+
+	// load level A
+	for( int i = 0; i < 100; i++ )
+	{
+		temp =  trr::entityHandler.CreateEntity();
+		trr::contentManager.GetResource("test.txt.test", [ temp ]( const void* data ) { } );
+		entities.push_back( temp );
+
+		temp =  trr::entityHandler.CreateEntity();
+		trr::contentManager.GetResource("test2.txt.test", [ temp ]( const void* data ) { } );
+		entities.push_back( temp );
+	}
+
+	//std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
+
+	// stall resource manager
+	trr::contentManager.StallLoading();
+
+	// unload level A
+	for( int i = 0; i < 100; i++ )
+	{
+		trr::contentManager.Unload( "test.txt.test" );
+		trr::contentManager.Unload( "test2.txt.test" );
+	}
+	for( int i = 0; i < entities.size(); i++ )
+	{
+		trr::entityHandler.RemoveEntity( entities[ i ] );
+	}
+	entities.clear();
+
+	// load level B
+	for( int i = 0; i < 100; i++ )
+	{
+		temp =  trr::entityHandler.CreateEntity();
+		trr::contentManager.GetResource("test2.txt.test", [ temp ]( const void* data ) { } );
+		entities.push_back( temp );
+
+		temp =  trr::entityHandler.CreateEntity();
+		trr::contentManager.GetResource("test3.txt.test", [ temp ]( const void* data ) { } );
+		entities.push_back( temp );
+	}
+
+	// resume resource manager
+	trr::contentManager.RunLoading();
+
+	std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) );
+
+
+	LOG_DEBUG << "TestB finished" << std::endl;
+}
+
+
+
+
+
+
+int main( int argc, char* argv[] )
+{
+	//trr::Level1 level;
+	//level.Init();
+	//ossianTest::zipTest();
+
+	trr::contentManager.InitContentLib(s2ws("test.zip"));
+
+
+	TestB();
 
 	
-
-	int breakpoint = 0;
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();

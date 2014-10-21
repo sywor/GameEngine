@@ -19,7 +19,7 @@ namespace trr
 		void* out = m_pAllocator->FlatAllocate(in.size);
 		std::memcpy( out, in.data, in.size);
 
-		std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
+		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 
 		LOG_DEBUG << "loaded test file" << std::endl;
 
@@ -30,7 +30,7 @@ namespace trr
 	{
 		m_pAllocator->deallocate( data );
 
-		std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
+		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 		LOG_DEBUG << "unloaded test file" << std::endl;
 	}
 

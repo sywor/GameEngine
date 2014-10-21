@@ -37,8 +37,8 @@ namespace trr
 
 		void erase( unsigned int index )
 		{
-			int delta = m_data.size() - 1 - index;
-			std::memcpy( &m_data[ index ], &m_data[ index + 1 ], sizeof( Entity ) * delta );
+			int delta = m_dataTop - index;
+			std::memcpy( &m_data[ index ], &m_data[ index + 1 ], sizeof( EntityLink ) * delta );
 			m_dataTop -= 1;
 		}
 
