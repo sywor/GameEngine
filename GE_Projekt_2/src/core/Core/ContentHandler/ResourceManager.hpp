@@ -437,10 +437,6 @@ namespace trr
 #endif
 
 
-// TO DO: Add function for stalling/resuming the work queue in the threadpool
-// TO DO: Add mutexes to respective position to secure the manager
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
 
-// TO DO: erase of assetList in Unload must check if nrReferences is non-zero?
-// TO DO: implement better init approach for threadpool nr threads and ev. other params.
