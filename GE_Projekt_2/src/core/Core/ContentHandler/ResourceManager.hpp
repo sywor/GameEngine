@@ -386,8 +386,6 @@ namespace trr
 					if( res->second.state == RState::READY )
 					{
 						std::string path = res->second.getPath();
-						LOG_DEBUG << "unloading " << path << std::endl;
-
 						assetList[ res->second.hash ].state = RState::UNLOADING;
 						std::string extension = assetList[ res->second.hash ].loaderExtension;					
 						std::uint64_t hash = res->second.hash;
@@ -400,7 +398,6 @@ namespace trr
 				else if( res->second.state == RState::WAITING_LOAD )
 				{
 					std::string path = res->second.getPath();
-					LOG_DEBUG << "loading " << path << std::endl;
 					workPool.Enqueue( [ this, path ]()
 					{
 						LoadResource( path );
