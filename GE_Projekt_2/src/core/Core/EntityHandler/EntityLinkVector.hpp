@@ -50,9 +50,23 @@ namespace trr
 		int Find( Entity id )
 		{
 			int size = m_dataTop + 1;
-			if( size == 0 )
+			if( size < 2 )
 			{
-				return -1;
+				if( size == 1 )
+				{
+					if( id == m_data[ 0 ].id )
+					{
+						return 0;
+					}
+					else
+					{
+						return -1;
+					}
+				}
+				else
+				{
+					return -1;
+				}
 			}
 			else
 			{
@@ -73,13 +87,17 @@ namespace trr
 					mid = bottom + ( top - bottom ) / 2;
 				}
 
-				if( id <= m_data[ mid ] )
+				if( id <= m_data[ mid ].id )
 				{
 					return mid;
 				}
-				else
+				else if( id == m_data[ mid + 1 ].id )
 				{
 					return mid + 1;
+				}
+				else
+				{
+					return -1;
 				}
 			}
 		}

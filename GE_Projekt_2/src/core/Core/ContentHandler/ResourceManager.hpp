@@ -124,22 +124,22 @@ namespace trr
 					ENTER_CRITICAL_SECTION_ASSETLIST;
 					Resource assetRef = assetList[hash];
 					assetRef.path	= path;
-					assetRef.state	= RState::READY;
+					assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
 					assetRef.data	= data;
 					assetRef.loaderExtension = ext;
+					assetList[hash]	= assetRef;
+
+					// always run callbacks
+					RunCallbacks( hash, data );
 
 					// check if unloaded while loading
 					if( assetRef.nrReferences == 0 )
 					{
-						workPool.Enqueue( [ hash ]()
+						std::string extension = assetList[ hash ].getExtension();
+						workPool.Enqueue( [ this, hash, extension ]()
 						{
-							UnloadResource( hash );
+							UnloadResource( hash, extension );
 						});
-					}
-					else
-					{
-						assetList[hash]	= assetRef;
-						RunCallbacks( hash, data );
 					}
 					EXIT_CRITICAL_SECTION_ASSETLIST;
 				}
@@ -175,15 +175,15 @@ namespace trr
 			{						
 				workPool.Enqueue( [ this, extension, hash ]()
 				{
-					LOG_DEBUG << "unloading resource" << std::endl;
+					LOG_DEBUG << "unloading resource with extension " << extension << std::endl;
 					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
-					
 					ENTER_CRITICAL_SECTION_ASSETLIST;
 					// the resource has been loaded while this function was loading
 					// add load call to queue
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
+						LOG_DEBUG << "there are references to unloaded object" << std::endl;
 						VolotileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
@@ -194,6 +194,7 @@ namespace trr
 					}
 					else
 					{
+						LOG_DEBUG << "there are no references to unloaded object" << std::endl;
 						assetList.erase( hash );
 					}
 
@@ -260,6 +261,7 @@ namespace trr
 		*/
 		void GetResource(std::string path, std::function<void(const void* data)> callback)
 		{
+			LOG_DEBUG << "aquiring asset" << std::endl;
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			
 			ENTER_CRITICAL_SECTION_ASSETLIST;
@@ -297,17 +299,17 @@ namespace trr
 			Loop thorugh function for Unload( std::uint64_t ) using path
 			as parameter.
 		*/
-		void Unload(std::string path, std::function<void(const void* data)> callback)
+		void Unload(std::string path )
 		{
 			std::uint64_t hash = MakeHash(path.data(), path.length());
-			Unload( hash, callback );
+			Unload( hash );
 		}
 
 		/*
 			Will decrease the referense counter of the supplied hash
 			and add job to unload should the number of referenses reach zero.
 		*/
-		void Unload( std::uint64_t hash, std::function<void(const void* data)> callback )
+		void Unload( std::uint64_t hash )
 		{
 			ENTER_CRITICAL_SECTION_ASSETLIST;
 			if( assetList.find( hash ) != assetList.end() )
@@ -316,7 +318,7 @@ namespace trr
 				if( assetList[ hash ].nrReferences == 0 && assetList[ hash ].state == RState::READY )
 				{
 					assetList[ hash ].state = RState::UNLOADING;
-					std::string extension = assetList[ hash ].loaderExtension;
+					std::string extension = assetList[ hash ].loaderExtension;					
 					workPool.Enqueue( [ this, hash, extension ]()
 					{
 						UnloadResource( hash, extension );
@@ -380,7 +382,3 @@ namespace trr
 
 // TO DO: erase of assetList in Unload must check if nrReferences is non-zero?
 // TO DO: implement better init approach for threadpool nr threads and ev. other params.
-
-
-
-

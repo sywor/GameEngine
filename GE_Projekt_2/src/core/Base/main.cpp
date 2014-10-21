@@ -45,23 +45,60 @@ int main( int argc, char* argv[] )
 
 	trr::contentManager.InitContentLib(s2ws("test.zip"));
 
+	
 
-	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
+	// add a
+	trr::Entity a =  trr::entityHandler.CreateEntity();
+	trr::contentManager.GetResource("test.txt.test", [ a ]( const void* data )
 	{
-		/*
-		LOG_DEBUG << "callback running" << std::endl;
-		char code[10];
-		std::memcpy( code, data, 10 );
-		LOG_DEBUG << "callback: " << code << std::endl;
-
-		trr::Entity ent = trr::entityHandler.CreateEntity();
-		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
-
-		*/
-
-		flag = 1;
+		if( trr::entityHandler.GetIndex( a ) != -1 )
+		{
+			LOG_DEBUG << a << " is alive in callback. " << std::endl;
+		}
+		else
+		{
+			LOG_DEBUG << a << " is dead in callback. " << std::endl;
+		}
 	});
 
+	// add b
+	trr::Entity b =  trr::entityHandler.CreateEntity();
+	trr::contentManager.GetResource("test.txt.test", [ b ]( const void* data )
+	{
+		if( trr::entityHandler.GetIndex( b ) != -1 )
+		{
+			LOG_DEBUG << b << " is alive in callback. " << std::endl;
+		}
+		else
+		{
+			LOG_DEBUG << b << " is dead in callback. " << std::endl;
+		}
+	});
+
+	// remove a
+	trr::entityHandler.RemoveEntity( a );
+	trr::contentManager.Unload( "test.txt.test" );
+	
+	// remove b
+	trr::entityHandler.RemoveEntity( b );
+	trr::contentManager.Unload( "test.txt.test" );
+
+	std::this_thread::sleep_for( std::chrono::milliseconds( 1300 ) );
+
+	// add c
+	trr::Entity c =  trr::entityHandler.CreateEntity();
+	trr::contentManager.GetResource("test.txt.test", [ c, &flag ]( const void* data )
+	{
+		if( trr::entityHandler.GetIndex( c ) != -1 )
+		{
+			LOG_DEBUG << c << " is alive in callback. " << std::endl;
+		}
+		else
+		{
+			LOG_DEBUG << c << " is dead in callback. " << std::endl;
+		}
+		flag = 1;
+	});
 
 	LOG_DEBUG << "main thread continues" << std::endl;
 	
@@ -69,27 +106,8 @@ int main( int argc, char* argv[] )
 	while (flag == 0);
 	flag = 0;
 
-	trr::contentManager.Unload( "test.txt.test", []( const void* data ){} );
 
-	trr::contentManager.GetResource("test.txt.test", [ &flag ]( const void* data )
-	{
-		/*
-		LOG_DEBUG << "callback running" << std::endl;
-		char code[10];
-		std::memcpy( code, data, 10 );
-		LOG_DEBUG << "callback: " << code << std::endl;
-
-		trr::Entity ent = trr::entityHandler.CreateEntity();
-		trr::entityHandler.AddComponent< trr::TransformationComponent >( ent );
-
-		*/
-
-		flag = 1;
-	});
-
-	trr::contentManager.Unload( "test.txt.test", []( const void* data ){} );
-
-	while (flag == 0);
+	
 
 	int breakpoint = 0;
 

@@ -94,7 +94,7 @@ namespace trr
 		{
 			return m_entityLinkList.Find( id );
 		}
-
+		
 		Entity GetEntity( int entityIndex )
 		{
 			return m_entityLinkList.Find( entityIndex );
