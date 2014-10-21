@@ -13,16 +13,16 @@ namespace PackageMaker
 {
     public partial class Main : Form
     {
-        List<byte> byteBuffer = new List<byte>();
-        Encoding utf8 = Encoding.UTF8;
+        //List<byte> assetByteBuffer = new List<byte>();        
         Queue<string> logBuffer = new Queue<string>(200);
-        string folderPath = "";
+        string folderPath = @"C:\temp\zlib128-dll";
         const int txbWidth = 100;
         const string fileFormatName = ".sorryForPotato";
 
         public Main()
         {
             InitializeComponent();
+            txb_in.Text = folderPath;
         }
 
         private void btn_browse_Click(object sender, EventArgs e)
@@ -48,43 +48,89 @@ namespace PackageMaker
 
         private void crawlDirectoryTree(string _rootDirectory)
         {
-            //print("serializing directory", _rootDirectory);
-            serializeString(_rootDirectory);
-            serializeAllFiles(Directory.GetFiles(_rootDirectory));
-    
-            string[] directories = Directory.GetDirectories(_rootDirectory);
+            Folder root = new Folder(_rootDirectory);
+            serializeAllFiles(ref root, Directory.GetFiles(_rootDirectory));
 
-            byteBuffer.AddRange(BitConverter.GetBytes((UInt32)directories.Length));
+            string[] directories = Directory.GetDirectories(_rootDirectory);
             
             foreach(string s in directories)
             {
-                crawlDirectoryTree(s);
+                Folder f = new Folder(s);
+                root.addSubFolder(f);
+                crawlDirectoryTree(ref f);
             }
-        }
 
-        private void serializeAllFiles(string[] _files)
-        {
-            UInt32 lenght = (UInt32)_files.Length;
-            byteBuffer.AddRange(BitConverter.GetBytes(lenght));
+            List<byte> byteBuffer = new List<byte>();
+            UInt32 offset = sizeof(UInt32);
+            getAssetBinaryBlob(root, ref offset, ref byteBuffer);
+            getFolderHeaderData(root, ref byteBuffer);
 
+            List<byte> finalByteBuffer = new List<byte>(byteBuffer.Count + sizeof(UInt32));
+            finalByteBuffer.AddRange(BitConverter.GetBytes(offset));
+            finalByteBuffer.AddRange(byteBuffer);
 
-            for(UInt32 i = 0; i < lenght; i++)
+            using (FileStream fs = File.Create(folderPath + fileFormatName))
             {
-                //print("serializing file", _files[i]);
-                serializeString(_files[i]);
-                byte[] tmp = File.ReadAllBytes(_files[i]);
-                byteBuffer.AddRange(BitConverter.GetBytes((UInt32)tmp.Length));
-                byteBuffer.AddRange(tmp);
+                fs.Write(finalByteBuffer.ToArray(), 0, finalByteBuffer.Count);
             }
         }
 
-        private void serializeString(string _str)
+        private void crawlDirectoryTree(ref Folder _rootDirectory)
         {
-            UInt32 length = (UInt32)utf8.GetByteCount(_str);
-            byteBuffer.AddRange(BitConverter.GetBytes(length));
-            byte[] tmp = new byte[length];
-            utf8.GetBytes(_str, 0, _str.Length, tmp, tmp.GetLowerBound(0));
-            byteBuffer.AddRange(tmp);
+            serializeAllFiles(ref _rootDirectory, Directory.GetFiles(_rootDirectory.getPath()));
+
+            string[] directories = Directory.GetDirectories(_rootDirectory.getPath());
+
+            foreach (string s in directories)
+            {
+                Folder f = new Folder(s);
+                _rootDirectory.addSubFolder(f);
+                crawlDirectoryTree(ref f);
+            }
+        }
+
+        private void serializeAllFiles(ref Folder _folder, string[] _files)
+        {
+            for (int i = 0; i < _files.Length; i++)
+            {
+                byte[] tmp = File.ReadAllBytes(_files[i]);
+                _folder.addAsset(new Asset(_files[i], tmp));
+            }
+        }
+
+        private void getAssetBinaryBlob(Folder _f, ref UInt32 _offset, ref List<byte> _list)
+        {
+            foreach (Asset a in _f.getAssets())
+            {
+                a.setStart(_offset);
+                _offset += a.getSize();
+                _list.AddRange(a.getBytes());
+            }
+
+            foreach (Folder f in _f.getSubFolders())
+            {
+                getAssetBinaryBlob(f, ref _offset, ref _list);
+            }
+        }
+
+        private void getFolderHeaderData(Folder _f, ref List<byte> _list)
+        {
+            _list.AddRange(Utils.serializeString(_f.getName()));
+            _list.AddRange(BitConverter.GetBytes((UInt32)_f.getAssets().Count));
+
+            foreach(Asset a in _f.getAssets())
+            {
+                _list.AddRange(Utils.serializeString(a.getName()));
+                _list.AddRange(BitConverter.GetBytes((UInt32)a.getStart()));
+                _list.AddRange(BitConverter.GetBytes((UInt32)a.getSize()));
+            }
+
+            _list.AddRange(BitConverter.GetBytes((UInt32)_f.getSubFolders().Count()));
+
+            foreach(Folder f in _f.getSubFolders())
+            {
+                getFolderHeaderData(f, ref _list);
+            }
         }
 
         private void print(string _title, string _body)
@@ -145,16 +191,6 @@ namespace PackageMaker
         private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             crawlDirectoryTree(folderPath);
-
-            string[] tmpStrArr = folderPath.Split('\\');
-            string fileName = tmpStrArr.Last() + fileFormatName;
-            int lastIndexOfSlash = folderPath.LastIndexOf('\\');
-            string filePath = folderPath.Substring(0, lastIndexOfSlash) + "\\";
-
-            using (FileStream fs = File.Create(filePath + fileName))
-            {
-                fs.Write(byteBuffer.ToArray(), 0, byteBuffer.Count);
-            }
         }
     }
 }
