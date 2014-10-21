@@ -24,15 +24,13 @@ namespace trr
 
 		/*
 			Loopthrough function for the asynchronous interface.
-			Will check hash reference count before and after loading 
-			in order to counter chained loading and unloading.
+			May be called by multiple threads at the same time.
 		*/
 		void* Load( DataContainer _data);
 
 		/*
 			Loopthrough function for the asynchronous interface.
-			Will check hash reference count before and after loading 
-			in order to counter chained loading and unloading.
+			May be called by multiple threads at the same time.
 		*/
 		void Unload( void* data );
 
