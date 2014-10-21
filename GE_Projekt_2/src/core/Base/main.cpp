@@ -162,6 +162,10 @@ void TestB()
 }
 
 
+void TestC()
+{
+	trr::contentManager.GetResource( "test.txt.test" );
+}
 
 
 
@@ -175,8 +179,8 @@ int main( int argc, char* argv[] )
 	trr::contentManager.InitContentLib(s2ws("test.zip"));
 
 
-	TestB();
-
+	//TestB();
+	TestC();
 	
 
  	_CrtDumpMemoryLeaks();

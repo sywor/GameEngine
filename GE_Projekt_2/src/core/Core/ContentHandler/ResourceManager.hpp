@@ -244,12 +244,29 @@ namespace trr
 	
 
 		/*
+			Blocking function but still uses threading in the background.
 			Attempts to load asset and returns void* to 
 			respective result container associated with the sought loader.
 		*/
 		const Resource GetResource( std::string path )
 		{
+			volatile int flag = 0;
+			std::uint64_t hash = MakeHash( path.data(), path.size() );
+			Resource res;
 			
+			GetResource( path, [ &flag ]( const void* data )
+			{
+				flag = 1;
+			});
+
+			while( flag == 0 );
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			if( assetList.find( hash ) != assetList.end() )
+			{
+				res = assetList[ hash ];
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+			return res;
 		}
 
 		/*
