@@ -165,6 +165,24 @@ void TestB()
 void TestC()
 {
 	trr::contentManager.GetResource( "test.txt.test" );
+	trr::contentManager.GetResource( "test.txt" );
+	trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader" );
+	trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test" );
+
+	trr::contentManager.GetResource( "test.txt.test",						[](const void* data)
+	{
+		if( CONTENT_CHECK_VALID_DATA( data ) )
+		{
+			// use
+		}
+		else
+		{
+			// error handing
+		}
+	});
+	trr::contentManager.GetResource( "test.txt",							[](const void* data){} );
+	trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader",	[](const void* data){} );
+	trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test",		[](const void* data){} );
 }
 
 

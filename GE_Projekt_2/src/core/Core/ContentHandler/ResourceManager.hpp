@@ -20,8 +20,13 @@
 #include <string>
 #include <functional>
 
-
-
+#define CONTENT_CALLBACK_CAN_NOT_FIND_FILE			(void*)1
+#define CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE		(void*)2
+#define CONTENT_CALLBACK_LOADING_FAILED				(void*)3
+#define CONTENT_CHECK_VALID_DATA( dataPointer )		( dataPointer != nullptr \
+													&& dataPointer != CONTENT_CALLBACK_CAN_NOT_FIND_FILE \
+													&& dataPointer != CONTENT_CALLBACK_LOADING_FAILED \
+													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE )
 
 #ifdef USE_ASYNC_LOCKING
 #ifdef USE_CRITICAL_SECTION_LOCK
@@ -102,6 +107,7 @@ namespace trr
 			std::string fileName = path.substr(0, sep);
 			const std::string ext = path.substr(sep + 1);
 
+			void* data = nullptr;
 			if (loaders.find(ext) != loaders.end())
 			{
 				ENTER_CRITICAL_SECTION_ZLIB;
@@ -117,33 +123,57 @@ namespace trr
 				}
 				EXIT_CRITICAL_SECTION_ZLIB;
 
-				void* data = nullptr;
-				if (zipReadResult && (data = loaders[ext]->Load( rawData )) != nullptr )
+				if( zipReadResult )
 				{
-					// resource existance is guaranteed by caller
-					ENTER_CRITICAL_SECTION_ASSETLIST;
-					Resource assetRef = assetList[hash];
-					assetRef.path	= path;
-					assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
-					assetRef.data	= data;
-					assetRef.loaderExtension = ext;
-					assetList[hash]	= assetRef;
-
-					// always run callbacks
-					RunCallbacks( hash, data );
-
-					// check if unloaded while loading
-					if( assetRef.nrReferences == 0 )
+					if( (data = loaders[ext]->Load( rawData )) == nullptr )
 					{
-						std::string extension = assetList[ hash ].getExtension();
-						workPool.Enqueue( [ this, hash, extension ]()
-						{
-							UnloadResource( hash, extension );
-						});
+						data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 					}
-					EXIT_CRITICAL_SECTION_ASSETLIST;
+				}
+				else
+				{
+					data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 				}
 				contentAllocator.deallocate(rawData.data);
+			}
+			else
+			{
+				data = CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE;
+			}
+			if( CONTENT_CHECK_VALID_DATA( data ) )
+			{
+				// resource existance is guaranteed by caller
+				ENTER_CRITICAL_SECTION_ASSETLIST;
+				Resource assetRef = assetList[hash];
+				assetRef.path	= path;
+				assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
+				assetRef.data	= data;
+				assetRef.loaderExtension = ext;
+				assetList[hash]	= assetRef;
+
+				// always run callbacks
+				RunCallbacks( hash, data );
+
+				// check if unloaded while loading
+				if( assetRef.nrReferences == 0 )
+				{
+					std::string extension = assetList[ hash ].getExtension();
+					workPool.Enqueue( [ this, hash, extension ]()
+					{
+						UnloadResource( hash, extension );
+					});
+				}
+				EXIT_CRITICAL_SECTION_ASSETLIST;
+			}
+			else
+			{
+				// error occurred
+				// remove asset instance
+				// run callbacks with tagged parameters
+				ENTER_CRITICAL_SECTION_ASSETLIST;
+				assetList.erase( hash );
+				RunCallbacks( hash, data );
+				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
 		}
 
@@ -239,9 +269,7 @@ namespace trr
 
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
-		// content interface
-
-	
+		// content interface	
 
 		/*
 			Blocking function but still uses threading in the background.
@@ -251,11 +279,13 @@ namespace trr
 		const Resource GetResource( std::string path )
 		{
 			volatile int flag = 0;
+			void* errorMessage = nullptr;
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			Resource res;
 			
-			GetResource( path, [ &flag ]( const void* data )
+			GetResource( path, [ &flag, &errorMessage ]( const void* data )
 			{
+				errorMessage = (void*)data;
 				flag = 1;
 			});
 
@@ -264,6 +294,10 @@ namespace trr
 			if( assetList.find( hash ) != assetList.end() )
 			{
 				res = assetList[ hash ];
+			}
+			else
+			{
+				res.data = errorMessage;
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 			return res;
