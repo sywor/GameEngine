@@ -483,3 +483,30 @@ namespace trr
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
 
+
+/* labb 2 requirements
+
+	- thread safe.
+	- hard limit memory usage.
+	- unload assets to free memory.
+	- dump list of currently loaded memory.
+	- test loaders
+	- guid
+	- stress scenario
+
+*/
+
+/* labb 3 
+	
+	e - graphical representation
+	e - use memory allocators
+	e - trivial report
+		d - 2 package formats, 2 asset formats
+			c - implement and explain 2 features not required by this or the 
+			    the previous assignemnts. may already be in use.
+					b - offline tool
+						a - formal report / stopid paper
+				
+
+
+*/
