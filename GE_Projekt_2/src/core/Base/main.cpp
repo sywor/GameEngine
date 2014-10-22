@@ -6,7 +6,7 @@
 #include <utility/HighresTimer.hpp>
 #include <logger/Logger.hpp>
 #include <Systems/TestSystem.hpp>
-#include <Core\ContentHandler\OssiansPlaygroud_DeleteUponRelese.hpp>
+#include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
 
 #include <Core\ContentHandler\ResourceManager.hpp>
 
@@ -21,17 +21,6 @@ std::wstring s2ws(const std::string& s)
 	MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, &r[0], len);
 	return r;
 }
-
-std::string ws2s(const std::wstring& s)
-{
-	int len;
-	int slength = (int)s.length() + 1;
-	len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
-	std::string r(len, '\0');
-	WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, &r[0], len, 0, 0);
-	return r;
-}
-
 
 void TestScenarioA()
 {
@@ -101,9 +90,6 @@ void TestScenarioA()
 
 }
 
-
-
-
 void TestB()
 {
 	int flag = 0;
@@ -161,7 +147,6 @@ void TestB()
 	LOG_DEBUG << "TestB finished" << std::endl;
 }
 
-
 void TestC()
 {
 	trr::contentManager.GetResource( "test.txt.test" );
@@ -186,8 +171,6 @@ void TestC()
 }
 
 
-
-
 int main( int argc, char* argv[] )
 {
 	//trr::Level1 level;
@@ -198,8 +181,10 @@ int main( int argc, char* argv[] )
 
 
 	//TestB();
-	TestC();
+	//TestC();
 	
+	ossianTest::SorryForPotato potato;
+	potato.ReadHeader("zlib128-dll.sorryForPotato");
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();

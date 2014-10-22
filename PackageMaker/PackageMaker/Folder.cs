@@ -11,7 +11,6 @@ namespace PackageMaker
         private List<Folder> subFolders = new List<Folder>();
         private List<Asset> assets = new List<Asset>();
         private string name, fullPath;
-        private byte[] data;
 
         public Folder(string _fullPath)
         {
@@ -47,33 +46,6 @@ namespace PackageMaker
         public string getPath()
         {
             return fullPath;
-        }
-
-        public void serialize()
-        {
-            List<byte> res = new List<byte>();
-            res.AddRange(Utils.serializeString(name));            
-
-            res.AddRange(BitConverter.GetBytes((UInt32)subFolders.Count));
-
-            foreach (Folder f in subFolders)
-            {
-                res.AddRange(Utils.serializeString(f.getName()));
-            }
-
-            res.AddRange(BitConverter.GetBytes((UInt32)assets.Count));
-
-            foreach (Asset a in assets)
-            {
-                res.AddRange(Utils.serializeString(a.getName()));
-            }
-
-
-        }
-
-        public byte[] getBytes()
-        {
-            return data;
         }
     }
 }
