@@ -582,7 +582,7 @@ namespace trr
 	v thread safe.
 	v hard limit memory usage.
 	- unload assets to free memory.
-	- dump list of currently loaded memory.
+	v dump list of currently loaded memory.
 	- test loaders
 	v guid
 	- stress scenario
