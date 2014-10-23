@@ -1,24 +1,24 @@
 #include "OssiansPlayground_DeleteUponRelease.hpp"
 #include <fstream>
-#include "utf8.hpp"
+#include <sstream>
 
 namespace ossianTest
 {
-#pragma region SorryForPotato
+#pragma region Potato
 
-	SorryForPotato::SorryForPotato()
+	Potato::Potato() : root(nullptr), fileName("N/A")
 	{
 
 	}
 
-	SorryForPotato::~SorryForPotato()
+	Potato::~Potato()
 	{
 
 	}
 
-	void SorryForPotato::ReadHeader(std::string _fileName)
+	void Potato::ReadHeader(const std::string& _packageName)
 	{
-		fileName = _fileName;
+		fileName = _packageName;
 
 		std::ifstream fs;
 		fs.open(fileName.c_str(), std::ifstream::binary);
@@ -37,14 +37,34 @@ namespace ossianTest
 
 			uint readPointer = 0;
 			root = ReadHeader(buffer, readPointer);
-
-			int meh = 0;
 		}
 
 		fs.close();
 	}
 
-	Directory* SorryForPotato::ReadHeader(void* _data, uint& _readPointer)
+	void* Potato::ReadAsset(const std::string &_fileName)
+	{
+		std::vector<std::string> path;
+		std::stringstream ss(_fileName);
+		std::string item;
+		std::ifstream fs;
+
+		while (std::getline(ss, item, '/')) 
+		{
+			path.push_back(item);
+		}
+
+		Asset* a = root->ReadAsset(path, 0);
+
+		fs.open(fileName.c_str(), std::ifstream::binary);
+		char* result = new char[a->GetSize()];
+		fs.seekg(a->GetStart());
+		fs.read(result, a->GetSize());
+
+		return result;
+	}
+
+	Directory* Potato::ReadHeader(void* _data, uint& _readPointer)
 	{
 		std::string directoryName = ReadString(_data, _readPointer);
 		uint directoryAssetCount = ReadUint(_data, _readPointer);
@@ -57,20 +77,21 @@ namespace ossianTest
 			uint start = ReadUint(_data, _readPointer);
 			uint size = ReadUint(_data, _readPointer);
 			Asset* a = new Asset(name, start, size);
-			dir->AddAsset(a);
+			dir->AddAsset(name, a);
 		}
 
 		uint subDirectoryCount = ReadUint(_data, _readPointer);
 
 		for (uint i = 0; i < subDirectoryCount; i++)
 		{
-			dir->AddSubDirectory(ReadHeader(_data, _readPointer));
+			Directory* tmp = ReadHeader(_data, _readPointer);
+			dir->AddSubDirectory(tmp->GetName(), tmp);
 		}
 
 		return dir;
 	}
 
-	std::string SorryForPotato::ReadString(void* _data, uint& _readPointer)
+	std::string Potato::ReadString(void* _data, uint& _readPointer)
 	{
 		char* data = (char*)_data;
 		data = data + _readPointer;		
@@ -82,7 +103,7 @@ namespace ossianTest
 		return str;
 	}
 
-	uint SorryForPotato::ReadUint(void* _data, uint& _readPointer)
+	uint Potato::ReadUint(void* _data, uint& _readPointer)
 	{
 		char* data = (char*)_data;
 		data = data + _readPointer;
@@ -97,7 +118,12 @@ namespace ossianTest
 
 #pragma region Directory
 
-	Directory::Directory(std::string _name)
+	Directory::Directory() : subDirectories(), assets()
+	{
+		name = "N/A";
+	}
+
+	Directory::Directory(std::string _name) : subDirectories(), assets()
 	{
 		name = _name;
 	}
@@ -107,14 +133,14 @@ namespace ossianTest
 
 	}
 
-	void Directory::AddSubDirectory(Directory* _directory)
+	void Directory::AddSubDirectory(std::string _name, Directory* _directory)
 	{
-		subDirectories.push_back(_directory);
+		subDirectories[_name] = _directory;
 	}
 
-	void Directory::AddAsset(Asset* _asset)
+	void Directory::AddAsset(std::string _name, Asset* _asset)
 	{
-		assets.push_back(_asset);
+		assets[_name] = _asset;
 	}
 
 	std::string Directory::GetName()
@@ -122,16 +148,35 @@ namespace ossianTest
 		return name;
 	}
 
+	Asset* Directory::ReadAsset(const std::vector<std::string>& _path, uint _index)
+	{
+		if ((_path.size() - 1) == _index)
+		{
+			if (assets.find(_path[_index]) != assets.end())
+			{
+				return assets[_path[_index]];
+			}
+
+			return nullptr;
+		}
+		else if (subDirectories.find(_path[_index]) != subDirectories.end())
+		{
+			return subDirectories[_path[_index]]->ReadAsset(_path, _index + 1);
+		}
+
+		return nullptr;
+	}
+
 #pragma endregion
 
 #pragma region Asset
 
-	Asset::Asset(std::string _name, uint _startByte, uint _size)
+	Asset::Asset() : name("N/A"), startByte(0), size(0)
 	{
-		name = _name;
-		startByte = _startByte;
-		size = _size;
-		data = nullptr;
+	}
+
+	Asset::Asset(std::string _name, uint _startByte, uint _size) : name(_name), startByte(_startByte), size(_size)
+	{
 	}
 
 	Asset::~Asset()
@@ -141,7 +186,7 @@ namespace ossianTest
 
 	void* Asset::GetData()
 	{
-		return data;
+		return nullptr;
 	}
 
 	std::string Asset::GetName()
@@ -152,6 +197,11 @@ namespace ossianTest
 	uint Asset::GetSize()
 	{
 		return size;
+	}
+
+	uint Asset::GetStart()
+	{
+		return startByte;
 	}
 
 #pragma endregion

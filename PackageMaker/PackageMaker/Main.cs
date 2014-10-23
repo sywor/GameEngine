@@ -17,7 +17,7 @@ namespace PackageMaker
         Queue<string> logBuffer = new Queue<string>(200);
         string folderPath = @"C:\temp\zlib128-dll";
         const int txbWidth = 100;
-        const string fileFormatName = ".sorryForPotato";
+        const string fileFormatName = ".Spud";
 
         public Main()
         {

@@ -177,14 +177,15 @@ int main( int argc, char* argv[] )
 	//level.Init();
 	//ossianTest::zipTest();
 
-	trr::contentManager.InitContentLib(s2ws("test.zip"));
+	//trr::contentManager.InitContentLib(s2ws("test.zip"));
 
 
 	//TestB();
 	//TestC();
 	
-	ossianTest::SorryForPotato potato;
-	potato.ReadHeader("zlib128-dll.sorryForPotato");
+	ossianTest::Potato potato;
+	potato.ReadHeader("zlib128-dll.Spud");
+	void* v = potato.ReadAsset("test/minigzip_d.exe");
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();
