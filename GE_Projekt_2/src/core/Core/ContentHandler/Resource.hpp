@@ -4,11 +4,11 @@
 #include <cstdint>
 #include <string>
 
-
 namespace trr
 {
 	enum RState
 	{
+		WAITING_LOAD,
 		LOADING,
 		UNLOADING,
 		READY
@@ -18,7 +18,7 @@ namespace trr
 	{
 	public:
 		Resource(std::uint64_t _hash = -1)
-		: hash(_hash), nrReferences(0), data(nullptr), loaderExtension("*"), state(LOADING)
+		: hash(_hash), nrReferences(0), data(nullptr), loaderExtension("*"), state(LOADING), path("")
 		{}
 
 	private:
@@ -29,6 +29,7 @@ namespace trr
 			state			= r.state;
 			data			= r.data;
 			loaderExtension = r.loaderExtension;
+			path			= r.path;
 		}
 
 		template< int MemoryBlockSize, int sizeOfMemory, typename... LoadersDef >
@@ -41,13 +42,15 @@ namespace trr
 		RState				state;
 		void*				data;
 		std::string			loaderExtension;
+		std::string			path;
 
 	public:
-		const unsigned int	getReferences() { return nrReferences; }
-		const void const*	getData()		{ return data; }
-		const std::string	getExtension()	{ return loaderExtension; }
-		const std::uint64_t	getHash()		{ return hash; }
-		const RState		getState()		{ return state; }
+		const unsigned int	getReferences() const { return nrReferences; }
+		const void*			getData()		const { return data; }
+		const std::string	getExtension()	const { return loaderExtension; }
+		const std::uint64_t	getHash()		const { return hash; }
+		const RState		getState()		const { return state; }
+		const std::string	getPath()		const { return path; }
 	};
 }
 

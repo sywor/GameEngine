@@ -11,8 +11,8 @@ namespace trr
 	{
 	private:
 
-		virtual bool internal_Load(void* data, DataContainer _data)	override;
-		virtual void internal_unload(void* data)					override;
+		virtual void* internal_Load( DataContainer in)			override;
+		virtual void internal_unload( void* data )				override;
 
 	public:
 		TestLoader();

@@ -10,16 +10,16 @@ namespace trr
 	}
 
 
-	bool ResourceLoader::Load(Resource& r, DataContainer _data)
+	void* ResourceLoader::Load( DataContainer _data)
 	{
 		// thread protection?
-		return internal_Load(r.data, _data);
+		return internal_Load( _data );
 	}
 
 		
-	void ResourceLoader::Unload(Resource& r)
+	void ResourceLoader::Unload( void* data )
 	{
-		internal_unload(r.data);
+		internal_unload( data );
 	}
 
 

@@ -36,6 +36,7 @@ trr::ThreadPool::~ThreadPool()
 
 	// kill yourselves, threads! ... and then kill the lock. Such beautiful!
 	std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+	m_condition.notify_all();
 }
 
 
@@ -84,7 +85,7 @@ void trr::ThreadPool::KillThreads()
     }
 
 	m_condition.notify_all();
-
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	m_nrThreads = 0;
 }
 
