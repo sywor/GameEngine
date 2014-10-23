@@ -15,7 +15,7 @@ namespace trr
 		8,
 
 		/* Size of the internal memory allocator */
-		1024,
+		524288,
 
 		/* Size of internal memory for metadata */
 		262144,
