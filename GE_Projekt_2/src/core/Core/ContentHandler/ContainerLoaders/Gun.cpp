@@ -58,13 +58,13 @@ namespace Potato
 		Asset* a = root->ReadAsset(path, 0);
 
 		if (a == nullptr)
-			return nullptr;
+			return CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 
 		fs.open(fileName.c_str(), std::ifstream::binary);
 		char* result = allocator->allocate<char>(a->GetSize());
 
 		if (result == nullptr)
-			return nullptr;
+			return CONTENT_CALLBACK_OUT_OF_MEMORY;
 
 		fs.seekg(a->GetStart());
 		fs.read(result, a->GetSize());
