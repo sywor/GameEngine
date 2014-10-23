@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <Core\ContentHandler\ResourceManager.hpp>
 #include "Gun.hpp"
 
 namespace Potato
@@ -56,8 +57,15 @@ namespace Potato
 
 		Asset* a = root->ReadAsset(path, 0);
 
+		if (a == nullptr)
+			return nullptr;
+
 		fs.open(fileName.c_str(), std::ifstream::binary);
 		char* result = allocator->allocate<char>(a->GetSize());
+
+		if (result == nullptr)
+			return nullptr;
+
 		fs.seekg(a->GetStart());
 		fs.read(result, a->GetSize());
 
