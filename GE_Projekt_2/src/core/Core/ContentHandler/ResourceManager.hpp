@@ -23,10 +23,12 @@
 #define CONTENT_CALLBACK_CAN_NOT_FIND_FILE			(void*)1
 #define CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE		(void*)2
 #define CONTENT_CALLBACK_LOADING_FAILED				(void*)3
+#define CONTENT_CALLBACK_OUT_OF_MEMORY				(void*)4
 #define CONTENT_CHECK_VALID_DATA( dataPointer )		( dataPointer != nullptr \
 													&& dataPointer != CONTENT_CALLBACK_CAN_NOT_FIND_FILE \
 													&& dataPointer != CONTENT_CALLBACK_LOADING_FAILED \
-													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE )
+													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE \
+													&& dataPointer != CONTENT_CALLBACK_OUT_OF_MEMORY )
 
 #ifdef USE_ASYNC_LOCKING
 #ifdef USE_CRITICAL_SECTION_LOCK
@@ -119,7 +121,14 @@ namespace trr
 				{
 					int fileLength = contentZipFile.GetFileLen(zipId);
 					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
+					if( rawData.data == nullptr )
+					{
+						data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+					}
+					else
+					{
+						zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
+					}
 				}
 				EXIT_CRITICAL_SECTION_ZLIB;
 
@@ -130,7 +139,7 @@ namespace trr
 						data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 					}
 				}
-				else
+				else if( data != CONTENT_CALLBACK_OUT_OF_MEMORY )
 				{
 					data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 				}
@@ -474,3 +483,30 @@ namespace trr
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
 
+
+/* labb 2 requirements
+
+	- thread safe.
+	- hard limit memory usage.
+	- unload assets to free memory.
+	- dump list of currently loaded memory.
+	- test loaders
+	- guid
+	- stress scenario
+
+*/
+
+/* labb 3 
+	
+	e - graphical representation
+	e - use memory allocators
+	e - trivial report
+		d - 2 package formats, 2 asset formats
+			c - implement and explain 2 features not required by this or the 
+			    the previous assignemnts. may already be in use.
+					b - offline tool
+						a - formal report / stopid paper
+				
+
+
+*/

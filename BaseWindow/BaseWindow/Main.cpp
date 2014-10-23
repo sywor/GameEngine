@@ -4,7 +4,7 @@
 #include "ButtonInput.h"
 #include <vector>
 #include "Graphics.h"
-
+#include "XMCamera.h"
 
 
 //--------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ IDXGISwapChain*         g_SwapChain = NULL;
 ID3D11Device*			g_Device = NULL;
 ID3D11DeviceContext*	g_DeviceContext = NULL;
 
-Camera* Cam = new Camera();
+ICamera* Cam = new XMCamera();
 ButtonInput* buttonInput = new ButtonInput();
 
 int g_Width, g_Height;
@@ -144,9 +144,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
 
-	Cam->setPerspectiveProjectionLH(45.0f, (float)(g_Width / g_Height), 1.0f, 1000000.0f);
-	Cam->setPositionAndView(0.0f, 0.0f, -10.0f, 0.0f, 0.0f);
-	Cam->setMovementSpeed(10);
+	Cam->init(g_Width, g_Height);
+	Cam->setPositionAndView(0.0f, 10.0f, 0.0f, 0.0f, 0.0f);
+	//Cam->setPerspectiveProjectionLH(45.0f, (float)(g_Width / g_Height), 1.0f, 1000000.0f);
+	//Cam->setPositionAndView(0.0f, 0.0f, -10.0f, 0.0f, 0.0f);
+	//Cam->setMovementSpeed(10);
 
 	// Main message loop
 	MSG msg = { 0 };
@@ -206,7 +208,7 @@ HRESULT InitWindow(HINSTANCE hInstance, int nCmdShow)
 
 	if (!(g_hWnd = CreateWindow(
 		"Base d3dx window",
-		"Basic d3dx window",
+		"Base d3dx window",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
