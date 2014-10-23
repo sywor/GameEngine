@@ -18,7 +18,7 @@ namespace trr
 		1024,
 
 		/* Size of internal memory for metadata */
-		1024,
+		262144,
 
 		/* List loader classes here */
 

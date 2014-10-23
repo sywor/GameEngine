@@ -154,7 +154,6 @@ namespace trr
 			Resource assetRef = assetList[hash];
 			if( assetRef.path == nullptr && CONTENT_CHECK_VALID_DATA( data ) )
 			{
-				LOG_DEBUG << "path not found" << std::endl;
 				char* pathMemory = (char*)contentAllocator.FlatAllocate( path.size() + 1 );
 				if( pathMemory != nullptr )
 				{
@@ -163,40 +162,32 @@ namespace trr
 					std::memcpy( pathMemory + path.size(), &tempChar, 1 );
 					assetList[ hash ].path = pathMemory;
 					assetRef.path = pathMemory;
-
-					int ss = path.length();
-
-					std::string test = assetList[ hash ].getPath();
-					int o = 0;
 				}
 				else
 				{
 					// handle error
+					contentAllocator.deallocate( data );
 					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
 				}
 			}
-			else
-			{
-				LOG_DEBUG << "path found" << std::endl;
-			}
 
-			if( assetRef.loaderExtension == nullptr && assetRef.path != nullptr )
+			if( assetRef.loaderExtension == nullptr && assetRef.path != nullptr && CONTENT_CHECK_VALID_DATA( data ) )
 			{
-				char* extMemory = (char*)contentAllocator.FlatAllocate( ext.size() );
+				char* extMemory = (char*)contentAllocator.FlatAllocate( ext.size() + 1 );
 				if( extMemory != nullptr )
 				{
 					std::memcpy( extMemory, ext.data(), ext.size() );
+					char tempChar = '\0';
+					std::memcpy( extMemory + ext.size(), &tempChar, 1 );
 					assetList[ hash ].loaderExtension = extMemory;
 				}
 				else
 				{
 					// handle error
+					contentAllocator.deallocate( data );
 					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
 				}
 			}
-
-
-			//std::string* extMemory = (std::string*)contentAllocator.FlatAllocate( ext.size() );
 
 			if( CONTENT_CHECK_VALID_DATA( data ) )
 			{
@@ -211,10 +202,8 @@ namespace trr
 
 				// check if unloaded while loading
 				if( assetRef.nrReferences == 0 )
-				{
-					LOG_DEBUG << "unloading" << std::endl;
+				{					
 					std::string extension = assetList[ hash ].getExtension();
-					LOG_DEBUG << "unloading" << std::endl;
 					workPool.Enqueue( [ this, hash, extension ]()
 					{
 						UnloadResource( hash, extension );
@@ -266,18 +255,15 @@ namespace trr
 		{
 			if( loaders.find( extension ) != loaders.end() )
 			{				
-				LOG_DEBUG << "checking unload" << std::endl;
 				workPool.Enqueue( [ this, extension, hash ]()
 				{
 					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
 					ENTER_CRITICAL_SECTION_ASSETLIST;
 					// the resource has been loaded while this function was loading
 					// add load call to queue
-					LOG_DEBUG << "reloading" << std::endl;
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
-						LOG_DEBUG << "reloading" << std::endl;
 						VolatileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
@@ -319,7 +305,6 @@ namespace trr
 			int split = internalMetaMemoryLimit / 2;
 			callbackListSizeLimit	= split / sizeof( CallbackContainer );
 			assetListSizeLimit		= split / sizeof( std::pair< std::uint64_t, Resource > );
-			
 
 			inOutStalled = false;
 			workPool.Initialize( 2 );
@@ -385,38 +370,55 @@ namespace trr
 		void GetResource(std::string path, std::function<void(const void* data)> callback)
 		{
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
-			
+
 			ENTER_CRITICAL_SECTION_ASSETLIST;
-			if( assetList.find( hash ) == assetList.end() )
+			if( callbackList.size() >= callbackListSizeLimit )
+			{
+				callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+				EXIT_CRITICAL_SECTION_ASSETLIST;
+				return;
+			}
+			else if( assetList.find( hash ) == assetList.end() )
 			{
 				// if asset is not existing, add it to the queue
-				Resource res( hash );
-				assetList[ hash ] = res;
-				callbackList.push_back( CallbackContainer( hash, callback ));
-				if( !inOutStalled )
+				if( assetList.size() < assetListSizeLimit )
 				{
-					workPool.Enqueue( [ this, path ]()
+					Resource res( hash );
+					assetList[ hash ] = res;
+					callbackList.push_back( CallbackContainer( hash, callback ));
+					if( !inOutStalled )
 					{
-						LoadResource( path );
-					});
-				}
-				else
-				{
-					assetList[ hash ].state = RState::WAITING_LOAD;
-					char* p = (char*)contentAllocator.FlatAllocate( path.size() );
-					if( p != nullptr )
-					{
-						std::memcpy( p, path.data(), path.size() );
-						assetList[ hash ].path	= p;
+						workPool.Enqueue( [ this, path ]()
+						{
+							LoadResource( path );
+						});
 					}
 					else
 					{
-						// handle error
-						RunCallbacks( hash, CONTENT_CALLBACK_OUT_OF_MEMORY );
-						assetList.erase( hash );
-						EXIT_CRITICAL_SECTION_ASSETLIST;
-						return;
+						assetList[ hash ].state = RState::WAITING_LOAD;
+						char* p = (char*)contentAllocator.FlatAllocate( path.size() + 1 );
+						if( p != nullptr )
+						{
+							std::memcpy( p, path.data(), path.size() );
+							char tempChar = '\0';
+							std::memcpy( p + path.size(), &tempChar, 1 );
+							assetList[ hash ].path	= p;
+						}
+						else
+						{
+							// handle error
+							RunCallbacks( hash, CONTENT_CALLBACK_OUT_OF_MEMORY );
+							assetList.erase( hash );
+							EXIT_CRITICAL_SECTION_ASSETLIST;
+							return;
+						}
 					}
+				}
+				else
+				{
+					callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+					return;
 				}
 			}
 			else if( assetList[ hash ].state != RState::READY )
