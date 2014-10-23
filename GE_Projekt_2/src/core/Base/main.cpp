@@ -6,7 +6,8 @@
 #include <utility/HighresTimer.hpp>
 #include <logger/Logger.hpp>
 #include <Systems/TestSystem.hpp>
-#include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
+//#include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
+#include <Core\ContentHandler\ContainerLoaders\Gun.hpp>
 
 #include <Core\ContentHandler\ResourceManager.hpp>
 
@@ -182,10 +183,10 @@ int main( int argc, char* argv[] )
 
 	//TestB();
 	//TestC();
-	
-	ossianTest::Potato potato;
-	potato.ReadHeader("zlib128-dll.Spud");
-	void* v = potato.ReadAsset("test/minigzip_d.exe");
+
+	Potato::Gun gun;
+	gun.Load("zlib128-dll.Spud");	
+	void* v = gun.Shoot("test/minigzip_d.exe");
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();
