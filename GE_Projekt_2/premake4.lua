@@ -42,7 +42,7 @@ solution "q_ge_project_2"
 		kind "ConsoleApp"
 		files { "src/core/**.cpp", "src/core/**.hpp", "src/core/**.h", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h"}
 		includedirs { "src/core", "include", "src/shared" }
-		links { "SDL2", "SDL2main", "SDL2test", "glew32", "opengl32", "gfx", "logger", "assimp", "lua51", "zlib" }
+		links { "SDL2", "SDL2main", "SDL2test", "glew32", "opengl32", "gfx", "logger", "assimp", "lua51", "zlib", "FreeImage" }
 		
 	
 	project "gfx"

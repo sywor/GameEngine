@@ -186,7 +186,7 @@ void TestC()
 }
 
 
-
+#include <Core/ContentHandler/Loaders/FreeImageLoader.hpp>
 
 int main( int argc, char* argv[] )
 {
@@ -194,12 +194,13 @@ int main( int argc, char* argv[] )
 	//level.Init();
 	//ossianTest::zipTest();
 
-	trr::contentManager.InitContentLib(s2ws("test.zip"));
+	//trr::contentManager.InitContentLib(s2ws("test.zip"));
 
 
 	//TestB();
-	TestC();
-	
+	//TestC();
+	bool b	= trr::contentManager.InitContentLib(s2ws("tImage.zip"));
+	trr::Resource r = trr::contentManager.GetResource("116.jpg.image");
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();

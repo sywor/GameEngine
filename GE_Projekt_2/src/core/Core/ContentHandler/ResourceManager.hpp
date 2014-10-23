@@ -113,14 +113,14 @@ namespace trr
 			if (loaders.find(ext) != loaders.end())
 			{
 				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
+				int zipId = contentZipFile.Find(path);	// note! full path instead of filename
 				bool zipReadResult = false;
 				DataContainer rawData;
 
 				if (zipId != -1)
 				{
 					int fileLength = contentZipFile.GetFileLen(zipId);
-					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength, fileName);
 					if( rawData.data == nullptr )
 					{
 						data = CONTENT_CALLBACK_OUT_OF_MEMORY;
@@ -276,7 +276,24 @@ namespace trr
 			return result;
 		}
 
+		/*
+		*/
+		bool AddLoader(ResourceLoader* customLoader)
+		{
+			if (customLoader == nullptr)
+				return false;
 
+			if (loaders.find(customLoader->GetExtension()))
+			{
+				printf("Default loader(%s) overriden by custom implementation\n", customLoader->GetExtension());
+				ResourceLoader* rl = loaders[customLoader->GetExtension()];
+				delete rl;
+				rl = nullptr;
+			}
+
+			loaders[customLoader->GetExtension()] = customLoader;
+			return true;
+		}
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// content interface	
 
