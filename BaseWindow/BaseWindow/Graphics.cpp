@@ -14,27 +14,26 @@ Graphics::Graphics()
 
 	//------------------------------ temp variables for testing
 
-	object = new Object();
-	loader = new Loader();
+	//object = new Object();
+	//loader = new Loader();
 
-	loader->LoadObject("Bunker.obj",0,0,0,1,object,1,1,1);
+	//loader->LoadObject("Bunker.obj",0,0,0,1,object,1,1,1);
 
-	object->InitBuffers("purple.jpg","cracked.jpg");
+	//object->InitBuffers("purple.jpg","cracked.jpg");
 
 	for (int i = 0; i < 6; i++)
 	{
-		wall[i].normal = D3DXVECTOR4(0, 0, -1, 1);
-		wall[i].texC = D3DXVECTOR2(i, i);
+		wall[i].normal	= VECTOR4(0, 0, 1, 1);
+		wall[i].texC	= VECTOR2(i, i);
 	}
-
-	wall[0].pos = D3DXVECTOR4(200, 200, 0, 1);
-	wall[1].pos = D3DXVECTOR4(200, -200, 0, 1);
-	wall[2].pos = D3DXVECTOR4(-200, -200, 0, 1);
-	wall[3].pos = D3DXVECTOR4(200, 200, 0, 1);
-	wall[4].pos = D3DXVECTOR4(-200, -200, 0, 1);
-	wall[5].pos = D3DXVECTOR4(-200, 200, 0, 1);
-
-
+	const float size	= 50.0f;
+	const float depth	= -10.0f;
+	wall[0].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
+	wall[1].pos = VECTOR4(1.0 * size,	1.0 * -size,	depth, 1);
+	wall[2].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
+	wall[3].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
+	wall[4].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
+	wall[5].pos = VECTOR4(1.0 * -size,	1.0 * size,		depth, 1);
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
@@ -71,11 +70,13 @@ Graphics::~Graphics()
 
 HRESULT Graphics::Update(float _deltaTime)
 {
-	D3DXMATRIX world;
-	D3DXMatrixIdentity(&world);
+	XMMATRIX world = XMMatrixIdentity();
+	XMMATRIX transpose = XMMatrixTranspose(world);
+	XMFLOAT4X4 wt;
+	XMStoreFloat4x4(&wt, transpose);
 
-	cbWorld.world = world;
-	cbWorld.worldInv = world;
+	cbWorld.world = wt;
+	cbWorld.worldInv = wt;
 	cbWorld.view = Cam->getViewMatrix();
 	cbWorld.projection = Cam->getProjectionMatrix();
 	g_DeviceContext->UpdateSubresource(g_cbWorld,0,NULL,&cbWorld,0,0);
@@ -90,8 +91,8 @@ HRESULT Graphics::Render(float _deltaTime)
 	//D3DXCOLOR color = D3DXCOLOR(Cam->getCameraPosition().x, Cam->getCameraPosition().y, Cam->getCameraPosition().z,0);
 	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
 	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
-
-	g_DeviceContext->ClearRenderTargetView(g_backBuffer, D3DXCOLOR(0.0f, 0.0f, 0.0f, 0));
+	g_DeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
+	g_DeviceContext->ClearRenderTargetView(g_backBuffer,COLOR(0.0f, 0.0f, 0.0f, 0));
 
 	g_DeviceContext->IASetInputLayout(g_vertexLayout);
 
@@ -110,11 +111,11 @@ HRESULT Graphics::Render(float _deltaTime)
 	g_DeviceContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
 
 
-	//g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
-	//g_DeviceContext->Draw(6,0);
+	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
+	g_DeviceContext->Draw(6,0);
 
-	g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
-	g_DeviceContext->Draw(3000,0);
+	//g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
+	//g_DeviceContext->Draw(3000,0);
 
 
 
@@ -134,6 +135,69 @@ void Graphics::createBackBuffer()
 		MessageBox(NULL, "Failed Making Constant Buffer", "Create Buffer", MB_OK);
 	// create shader unordered access view on back buffer for compute shader to write into texture
 	hr = g_Device->CreateRenderTargetView(pBackBuffer, NULL, &g_backBuffer);
+	//pBackBuffer->Release();
+
+	D3D11_TEXTURE2D_DESC descDepth;
+	descDepth.Width = g_Width;
+	descDepth.Height = g_Height;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	descDepth.CPUAccessFlags = 0;
+	descDepth.MiscFlags = 0;
+	hr = g_Device->CreateTexture2D(&descDepth, NULL, &g_pDepthStencil);
+	if (FAILED(hr))
+		MessageBox(NULL, "Failed Making Depth Stencil", "Create Buffer", MB_OK);
+
+	// depth stencil state
+	// Initialize the description of the stencil state.
+	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+	// Set up the description of the stencil state.
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthStencilDesc.StencilEnable = true;
+	depthStencilDesc.StencilReadMask = 0xFF;
+	depthStencilDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing.
+	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing.
+	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	hr = g_Device->CreateDepthStencilState(&depthStencilDesc, &g_depthStencilState);
+	if (FAILED(hr))
+		MessageBox(NULL, "Failed Making Depth Stencil", "Create Buffer", MB_OK);
+
+	g_DeviceContext->OMSetDepthStencilState(g_depthStencilState, 1);
+
+	// Create the depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+	ZeroMemory(&descDSV, sizeof(descDSV));
+	descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
+	hr = g_Device->CreateDepthStencilView(g_pDepthStencil, &descDSV, &g_pDepthStencilView);
+	if (FAILED(hr))
+		MessageBox(NULL, "Failed Making Depth Stencil", "Create Buffer", MB_OK);
+
+	g_DeviceContext->OMSetRenderTargets(1, &g_backBuffer, g_pDepthStencilView);
+
+
 }
 
 void Graphics::createShader(std::string _shader, std::string _shaderModel)

@@ -5,6 +5,9 @@
 //#include <d3dx10.h>
 #include "hrTimer.h"
 
+
+#ifdef OLD_XLIB
+
 #define TWO_PI 6.283185307179586476925286766559
 #define DEG_TO_RAD 0.01745329251994329576923690768489
 
@@ -71,4 +74,5 @@ private:
 	void updateView();
 };
 
+#endif
 #endif

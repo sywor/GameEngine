@@ -25,17 +25,16 @@ PS_INPUT main(VS_INPUT _input)
 
 	output.pos = mul(_input.pos, worldviewproj);
 
-
 	//output.pos = mul(_input.pos, world);
 	//output.pos = mul(output.pos, view);
 	//output.pos = mul(output.pos, projection);
 
 
 
-
-	output.normal = mul(_input.normal, world);
-	output.normal = mul(output.normal, view);
-	output.normal = mul(output.normal, projection);
+	output.normal = _input.pos;
+	//output.normal = mul(_input.normal, world);
+	//output.normal = mul(output.normal, view);
+	//output.normal = mul(output.normal, projection);
 
 	output.tex = _input.tex;
 

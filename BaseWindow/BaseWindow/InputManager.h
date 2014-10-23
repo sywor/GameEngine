@@ -1,9 +1,9 @@
 #ifndef _RAWINPUT
 #define _RAWINPUT
-#include "Camera.h"  //Gillar inte detta då det inte behövdes tidigare
+#include "ICamera.h"  //Gillar inte detta då det inte behövdes tidigare
 #include "ButtonInput.h"
 
-extern Camera* Cam;
+extern ICamera* Cam;
 extern ButtonInput* buttonInput;
 
 //register keyboard mouse as input devices!
@@ -124,8 +124,11 @@ void inline HandleRawInput( HWND &hWnd, HRAWINPUT &lParam )
 	//---------------------------------------------------------------------------
 	else if (raw->header.dwType == RIM_TYPEMOUSE) 
 	{
+		float x = raw->data.mouse.lLastX;
+		float y = raw->data.mouse.lLastY;
+		float mul = 0.0025f;
 		//mouse camera control
-		Cam->adjustHeadingPitch( 0.0025f * raw->data.mouse.lLastX, 0.0025f * raw->data.mouse.lLastY );				
+		Cam->adjustHeadingPitch( mul * (float)raw->data.mouse.lLastX, mul * (float)raw->data.mouse.lLastY );				
 		
 	}
 
