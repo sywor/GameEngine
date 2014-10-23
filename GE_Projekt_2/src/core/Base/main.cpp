@@ -183,10 +183,11 @@ int main( int argc, char* argv[] )
 
 	//TestB();
 	//TestC();
+	//PoolAllocator* allocator;
 
-	Potato::Gun gun;
-	gun.Load("zlib128-dll.Spud");	
-	void* v = gun.Shoot("test/minigzip_d.exe");
+	//Potato::Gun gun(allocator);
+	//gun.Load("zlib128-dll.Spud");	
+	//void* v = gun.Shoot("test/minigzip_d.exe");
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();

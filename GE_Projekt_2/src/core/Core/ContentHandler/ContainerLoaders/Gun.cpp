@@ -5,7 +5,7 @@
 namespace Potato
 {
 
-	Gun::Gun() : root(nullptr), fileName("N/A")
+	Gun::Gun(PoolAllocator* _allocator) : root(nullptr), fileName("N/A"), allocator(_allocator)
 	{
 
 	}
@@ -23,19 +23,20 @@ namespace Potato
 		fs.open(fileName.c_str(), std::ifstream::binary);
 
 		if (fs.is_open())
-		{
-			char* buffer = new char[sizeof(uint)];
-			fs.read(buffer, sizeof(uint));
-			uint headerStart = *((uint*)buffer);
+		{			
+			uint headerStart;
+			fs.read((char*)&headerStart, sizeof(uint));
 			fs.seekg(0, std::ifstream::end);
 			uint fileEnd = fs.tellg();
 			uint headerSize = fileEnd - headerStart;
 			fs.seekg(headerStart);
-			buffer = new char[headerSize];
+			char* buffer = allocator->allocate<char>(headerSize);
 			fs.read(buffer, headerSize);
 
 			uint readPointer = 0;
 			root = ReadHeader(buffer, readPointer);
+
+			allocator->deallocate(buffer);
 		}
 
 		fs.close();
@@ -56,7 +57,7 @@ namespace Potato
 		Asset* a = root->ReadAsset(path, 0);
 
 		fs.open(fileName.c_str(), std::ifstream::binary);
-		char* result = new char[a->GetSize()];
+		char* result = allocator->allocate<char>(a->GetSize());
 		fs.seekg(a->GetStart());
 		fs.read(result, a->GetSize());
 
@@ -68,14 +69,14 @@ namespace Potato
 		std::string directoryName = ReadString(_data, _readPointer);
 		uint directoryAssetCount = ReadUint(_data, _readPointer);
 
-		Directory* dir = new Directory(directoryName);
+		Directory* dir = allocator->allocate<Directory>(directoryName);
 
 		for (uint i = 0; i < directoryAssetCount; i++)
 		{
 			std::string name = ReadString(_data, _readPointer);
 			uint start = ReadUint(_data, _readPointer);
 			uint size = ReadUint(_data, _readPointer);
-			Asset* a = new Asset(name, start, size);
+			Asset* a = allocator->allocate<Asset>(name, start, size);
 			dir->AddAsset(name, a);
 		}
 
