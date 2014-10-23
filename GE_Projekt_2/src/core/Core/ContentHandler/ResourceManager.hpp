@@ -282,6 +282,7 @@ namespace trr
 			}
 		}
 
+
 	public: 
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
@@ -327,6 +328,15 @@ namespace trr
 			return result;
 		}
 
+		void DumpAssetList()
+		{
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			for( auto res = assetList.begin(); res != assetList.end(); res++ )
+			{
+				LOG_DEBUG <<  "asset dump - nrRefs: " << res->second.getReferences() << "  " << res->second.getPath() << std::endl;
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+		}
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// content interface	
@@ -569,12 +579,12 @@ namespace trr
 
 /* labb 2 requirements
 
-	- thread safe.
-	- hard limit memory usage.
+	v thread safe.
+	v hard limit memory usage.
 	- unload assets to free memory.
 	- dump list of currently loaded memory.
 	- test loaders
-	- guid
+	v guid
 	- stress scenario
 
 */

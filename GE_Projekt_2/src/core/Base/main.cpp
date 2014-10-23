@@ -97,6 +97,8 @@ void TestA()
 	flag = 0;
 	int breakpoint = 0;
 
+	trr::contentManager.DumpAssetList();
+
 	LOG_DEBUG << "TestA finished" << std::endl;
 
 }
