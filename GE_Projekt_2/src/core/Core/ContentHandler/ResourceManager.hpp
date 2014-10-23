@@ -24,11 +24,13 @@
 #define CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE		(void*)2
 #define CONTENT_CALLBACK_LOADING_FAILED				(void*)3
 #define CONTENT_CALLBACK_OUT_OF_MEMORY				(void*)4
+#define CONTENT_CALLBACK_INVALID_COMPRESSION		(void*)5
 #define CONTENT_CHECK_VALID_DATA( dataPointer )		( dataPointer != nullptr \
 													&& dataPointer != CONTENT_CALLBACK_CAN_NOT_FIND_FILE \
 													&& dataPointer != CONTENT_CALLBACK_LOADING_FAILED \
 													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE \
-													&& dataPointer != CONTENT_CALLBACK_OUT_OF_MEMORY )
+													&& dataPointer != CONTENT_CALLBACK_OUT_OF_MEMORY \
+													&& datapointer != CONTENT_CALLBACK_INVALID_COMPRESSION )
 
 #ifdef USE_ASYNC_LOCKING
 #ifdef USE_CRITICAL_SECTION_LOCK
@@ -259,6 +261,7 @@ namespace trr
 			workPool.Initialize( 2 );
 			ResourceLoader::SetAllocator(&contentAllocator);
 			InitializeArrayWithNew< LoadersDef... >( &loaders, &contentAllocator );
+			contentZipFile = ZipFile(contentAllocator);
 		}
 
 		~ResourceManager()

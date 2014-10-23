@@ -5,7 +5,6 @@
 //
 // --------------------------------------------------------------------------
 
-//#include "GameCodeStd.h"
 
 #include <cctype>			// for std::tolower
 
@@ -14,6 +13,8 @@
 #include <zlib/zlib.h>
 #include <string.h>
 #include <cassert>
+#include <Core\Memory\PoolAllocator.h>
+#include <Core\ContentHandler\ResourceManager.hpp>
 
 
 // --------------------------------------------------------------------------
@@ -96,19 +97,30 @@ struct ZipFile::TZipDirFileHeader
 	dword   extAttr;
 	dword   hdrOffset;
 
-	char *GetName() const { return (char *)(this + 1); }
-	char *GetExtra() const { return GetName() + fnameLen; }
-	char *GetComment() const { return GetExtra() + xtraLen; }
+	char *GetName() const 
+	{ 
+		return (char*)(this + 1); 
+	}
+
+	char *GetExtra() const 
+	{ 
+		return GetName() + fnameLen; 
+	}
+
+	char *GetComment() const 
+	{ 
+		return GetExtra() + xtraLen; 
+	}
 };
 
 #pragma pack()
 
 // --------------------------------------------------------------------------
-// Function:      Init
+// Function:      Load
 // Purpose:       Initialize the object and read the zip file directory.
 // Parameters:    A stdio FILE* used for reading.
 // --------------------------------------------------------------------------
-bool ZipFile::Init(const std::wstring &resFileName)
+bool ZipFile::Load(const std::wstring &resFileName)
 {
 	End();
 
@@ -135,7 +147,7 @@ bool ZipFile::Init(const std::wstring &resFileName)
 	fseek(m_pFile, dhOffset - dh.dirSize, SEEK_SET);
 
 	// Allocate the data buffer, and read the whole thing.
-	m_pDirData = new char[dh.dirSize + dh.nDirEntries*sizeof(*m_papDir)];
+	m_pDirData = allocator->allocate<char>(dh.dirSize + dh.nDirEntries*sizeof(*m_papDir));// new char[dh.dirSize + dh.nDirEntries*sizeof(*m_papDir)];
 
 	if (!m_pDirData)
 		return false;
@@ -182,7 +194,8 @@ bool ZipFile::Init(const std::wstring &resFileName)
 	}
 	if (!success)
 	{
-		DELETE_ARRAY(m_pDirData)
+		//DELETE_ARRAY(m_pDirData)
+		allocator->deallocate(m_pDirData);
 	}
 	else
 	{
@@ -215,7 +228,8 @@ void ZipFile::End()
 {
 	m_ZipContentsMap.clear();
 
-	DELETE_ARRAY(m_pDirData)
+	//DELETE_ARRAY(m_pDirData)
+	allocator->deallocate(m_pDirData);
 
 	m_nEntries = 0;
 }
@@ -225,18 +239,18 @@ void ZipFile::End()
 // Purpose:       Return the name of a file
 // Parameters:    The file index and the buffer where to store the filename
 // --------------------------------------------------------------------------
-std::string ZipFile::GetFilename(int i)  const
-{
-	std::string fileName = "";
-	if (i >= 0 && i < m_nEntries)
-	{
-		char pszDest[_MAX_PATH];
-		memcpy(pszDest, m_papDir[i]->GetName(), m_papDir[i]->fnameLen);
-		pszDest[m_papDir[i]->fnameLen] = '\0';
-		fileName = pszDest;
-	}
-	return fileName;
-}
+//std::string ZipFile::GetFilename(int i)  const
+//{
+//	std::string fileName = "";
+//	if (i >= 0 && i < m_nEntries)
+//	{
+//		char pszDest[_MAX_PATH];
+//		memcpy(pszDest, m_papDir[i]->GetName(), m_papDir[i]->fnameLen);
+//		pszDest[m_papDir[i]->fnameLen] = '\0';
+//		fileName = pszDest;
+//	}
+//	return fileName;
+//}
 
 
 // --------------------------------------------------------------------------
@@ -257,16 +271,20 @@ int ZipFile::GetFileLen(int i) const
 // Purpose:       Uncompress a complete file
 // Parameters:    The file index and the pre-allocated buffer
 // --------------------------------------------------------------------------
-bool ZipFile::ReadFile(int i, void *pBuf)
+void* ZipFile::ReadFile(const std::string &path)
 {
-	if (pBuf == NULL || i < 0 || i >= m_nEntries)
-		return false;
+	int index = Find(path);
 
-	// Quick'n dirty read, the whole file at once.
-	// Ungood if the ZIP has huge files inside
+	if (index < 0 || index >= m_nEntries)
+		return CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
+
+	char* result = allocator->allocate<char>(GetFileLen(index));
+
+	if (result == nullptr)
+		return CONTENT_CALLBACK_OUT_OF_MEMORY;
 
 	// Go to the actual file and read the local header.
-	fseek(m_pFile, m_papDir[i]->hdrOffset, SEEK_SET);
+	fseek(m_pFile, m_papDir[index]->hdrOffset, SEEK_SET);
 	TZipLocalHeader h;
 
 	memset(&h, 0, sizeof(h));
@@ -282,21 +300,19 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 	if (h.compression == Z_NO_COMPRESSION)
 	{
 		// Simply read in raw stored data.
-		fread(pBuf, h.cSize, 1, m_pFile);
-		return true;
+		fread(result, h.cSize, 1, m_pFile);
+		return result;
 	}
 	else if (h.compression != Z_DEFLATED)
-		return false;
+		return CONTENT_CALLBACK_INVALID_COMPRESSION;
 
 	// Alloc compressed data buffer and read the whole stream
-	char *pcData = new char[h.cSize];
-	if (!pcData)
-		return false;
+	char *pcData = allocator->allocate<char>(h.cSize);
+	if (pcData == nullptr)
+		return CONTENT_CALLBACK_OUT_OF_MEMORY;
 
 	memset(pcData, 0, h.cSize);
 	fread(pcData, h.cSize, 1, m_pFile);
-
-	bool ret = true;
 
 	// Setup the inflate stream.
 	z_stream stream;
@@ -304,7 +320,7 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 
 	stream.next_in = (Bytef*)pcData;
 	stream.avail_in = (uInt)h.cSize;
-	stream.next_out = (Bytef*)pBuf;
+	stream.next_out = (Bytef*)result;
 	stream.avail_out = h.ucSize;
 	stream.zalloc = (alloc_func)0;
 	stream.zfree = (free_func)0;
@@ -320,10 +336,10 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 		inflateEnd(&stream);
 	}
 	if (err != Z_OK)
-		ret = false;
+		return CONTENT_CALLBACK_INVALID_COMPRESSION;
 
-	delete[] pcData;
-	return ret;
+	allocator->deallocate(pcData);
+	return result;
 }
 
 
@@ -332,88 +348,89 @@ bool ZipFile::ReadFile(int i, void *pBuf)
 // Purpose:       Uncompress a complete file with callbacks.
 // Parameters:    The file index and the pre-allocated buffer
 // --------------------------------------------------------------------------
-bool ZipFile::ReadLargeFile(int i, void *pBuf, void(*progressCallback)(int, bool &))
-{
-	if (pBuf == NULL || i < 0 || i >= m_nEntries)
-		return false;
-
-	// Quick'n dirty read, the whole file at once.
-	// Ungood if the ZIP has huge files inside
-
-	// Go to the actual file and read the local header.
-	fseek(m_pFile, m_papDir[i]->hdrOffset, SEEK_SET);
-	TZipLocalHeader h;
-
-	memset(&h, 0, sizeof(h));
-
-	fread(&h, sizeof(h), 1, m_pFile);
-
-	if (h.sig != TZipLocalHeader::SIGNATURE)
-		return false;
-
-	// Skip extra fields
-	fseek(m_pFile, h.fnameLen + h.xtraLen, SEEK_CUR);
-
-	if (h.compression == Z_NO_COMPRESSION)
-	{
-		// Simply read in raw stored data.
-		fread(pBuf, h.cSize, 1, m_pFile);
-		return true;
-	}
-	else if (h.compression != Z_DEFLATED)
-		return false;
-
-	// Alloc compressed data buffer and read the whole stream
-	char *pcData = new char[h.cSize];
-	if (!pcData)
-		return false;
-
-	memset(pcData, 0, h.cSize);
-	fread(pcData, h.cSize, 1, m_pFile);
-
-	bool ret = true;
-
-	// Setup the inflate stream.
-	z_stream stream;
-	int err;
-
-	stream.next_in = (Bytef*)pcData;
-	stream.avail_in = (uInt)h.cSize;
-	stream.next_out = (Bytef*)pBuf;
-	stream.avail_out = (128 * 1024); //  read 128k at a time h.ucSize;
-	stream.zalloc = (alloc_func)0;
-	stream.zfree = (free_func)0;
-
-	// Perform inflation. wbits < 0 indicates no zlib header inside the data.
-	err = inflateInit2(&stream, -MAX_WBITS);
-	if (err == Z_OK)
-	{
-		uInt count = 0;
-		bool cancel = false;
-		while (stream.total_in < (uInt)h.cSize && !cancel)
-		{
-			err = inflate(&stream, Z_SYNC_FLUSH);
-			if (err == Z_STREAM_END)
-			{
-				err = Z_OK;
-				break;
-			}
-			else if (err != Z_OK)
-			{
-				assert(0 && "Something happened.");
-				break;
-			}
-
-			stream.avail_out = (128 * 1024);
-			stream.next_out += stream.total_out;
-
-			progressCallback(count * 100 / h.cSize, cancel);
-		}
-		inflateEnd(&stream);
-	}
-	if (err != Z_OK)
-		ret = false;
-
-	delete[] pcData;
-	return ret;
-}
+//bool ZipFile::ReadLargeFile(int i, void *pBuf, void(*progressCallback)(int, bool &))
+//{
+//	if (pBuf == NULL || i < 0 || i >= m_nEntries)
+//		return false;
+//
+//	// Quick'n dirty read, the whole file at once.
+//	// Ungood if the ZIP has huge files inside
+//
+//	// Go to the actual file and read the local header.
+//	fseek(m_pFile, m_papDir[i]->hdrOffset, SEEK_SET);
+//	TZipLocalHeader h;
+//
+//	memset(&h, 0, sizeof(h));
+//
+//	fread(&h, sizeof(h), 1, m_pFile);
+//
+//	if (h.sig != TZipLocalHeader::SIGNATURE)
+//		return false;
+//
+//	// Skip extra fields
+//	fseek(m_pFile, h.fnameLen + h.xtraLen, SEEK_CUR);
+//
+//	if (h.compression == Z_NO_COMPRESSION)
+//	{
+//		// Simply read in raw stored data.
+//		fread(pBuf, h.cSize, 1, m_pFile);
+//		return true;
+//	}
+//	else if (h.compression != Z_DEFLATED)
+//		return false;
+//
+//	// Alloc compressed data buffer and read the whole stream
+//	char *pcData = allocator->allocate<char>(h.cSize);//new char[h.cSize];
+//	if (!pcData)
+//		return false;
+//
+//	memset(pcData, 0, h.cSize);
+//	fread(pcData, h.cSize, 1, m_pFile);
+//
+//	bool ret = true;
+//
+//	// Setup the inflate stream.
+//	z_stream stream;
+//	int err;
+//
+//	stream.next_in = (Bytef*)pcData;
+//	stream.avail_in = (uInt)h.cSize;
+//	stream.next_out = (Bytef*)pBuf;
+//	stream.avail_out = (128 * 1024); //  read 128k at a time h.ucSize;
+//	stream.zalloc = (alloc_func)0;
+//	stream.zfree = (free_func)0;
+//
+//	// Perform inflation. wbits < 0 indicates no zlib header inside the data.
+//	err = inflateInit2(&stream, -MAX_WBITS);
+//	if (err == Z_OK)
+//	{
+//		uInt count = 0;
+//		bool cancel = false;
+//		while (stream.total_in < (uInt)h.cSize && !cancel)
+//		{
+//			err = inflate(&stream, Z_SYNC_FLUSH);
+//			if (err == Z_STREAM_END)
+//			{
+//				err = Z_OK;
+//				break;
+//			}
+//			else if (err != Z_OK)
+//			{
+//				assert(0 && "Something happened.");
+//				break;
+//			}
+//
+//			stream.avail_out = (128 * 1024);
+//			stream.next_out += stream.total_out;
+//
+//			progressCallback(count * 100 / h.cSize, cancel);
+//		}
+//		inflateEnd(&stream);
+//	}
+//	if (err != Z_OK)
+//		ret = false;
+//
+//	//delete[] pcData;
+//	allocator->deallocate(pcData);
+//	return ret;
+//}
