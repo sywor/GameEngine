@@ -261,6 +261,7 @@
 //	return 0;
 //}
 
+/*
 #include <Core/ContentHandler/ResourceManager.hpp>
 #include <Core/ContentHandler/ResourceLoader.hpp>
 #include <Core/ContentHandler/Resource.hpp>
@@ -277,3 +278,4 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	return 0;
 }
+*/

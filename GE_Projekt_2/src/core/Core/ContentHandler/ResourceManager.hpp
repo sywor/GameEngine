@@ -91,7 +91,7 @@ static bool MatchExtension(const char* fExt, const char *lExt)
 namespace trr
 {
 
-	template< int MemoryBlockSize, int sizeOfMemory, typename... LoadersDef >
+	template< int memoryBlockSize, int sizeOfMemory, int internalMetaMemoryLimit, typename... LoadersDef >
 	class ResourceManager
 	{
 	private:
@@ -149,15 +149,61 @@ namespace trr
 			{
 				data = CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE;
 			}
+
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			Resource assetRef = assetList[hash];
+			if( assetRef.path == nullptr && CONTENT_CHECK_VALID_DATA( data ) )
+			{
+				LOG_DEBUG << "path not found" << std::endl;
+				char* pathMemory = (char*)contentAllocator.FlatAllocate( path.size() + 1 );
+				if( pathMemory != nullptr )
+				{
+					std::memcpy( pathMemory, path.c_str(), path.length() );
+					char tempChar = '\0';
+					std::memcpy( pathMemory + path.size(), &tempChar, 1 );
+					assetList[ hash ].path = pathMemory;
+					assetRef.path = pathMemory;
+
+					int ss = path.length();
+
+					std::string test = assetList[ hash ].getPath();
+					int o = 0;
+				}
+				else
+				{
+					// handle error
+					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+				}
+			}
+			else
+			{
+				LOG_DEBUG << "path found" << std::endl;
+			}
+
+			if( assetRef.loaderExtension == nullptr && assetRef.path != nullptr )
+			{
+				char* extMemory = (char*)contentAllocator.FlatAllocate( ext.size() );
+				if( extMemory != nullptr )
+				{
+					std::memcpy( extMemory, ext.data(), ext.size() );
+					assetList[ hash ].loaderExtension = extMemory;
+				}
+				else
+				{
+					// handle error
+					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+				}
+			}
+
+
+			//std::string* extMemory = (std::string*)contentAllocator.FlatAllocate( ext.size() );
+
 			if( CONTENT_CHECK_VALID_DATA( data ) )
 			{
 				// resource existance is guaranteed by caller
-				ENTER_CRITICAL_SECTION_ASSETLIST;
 				Resource assetRef = assetList[hash];
-				assetRef.path	= path;
 				assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
 				assetRef.data	= data;
-				assetRef.loaderExtension = ext;
 				assetList[hash]	= assetRef;
 
 				// always run callbacks
@@ -166,24 +212,24 @@ namespace trr
 				// check if unloaded while loading
 				if( assetRef.nrReferences == 0 )
 				{
+					LOG_DEBUG << "unloading" << std::endl;
 					std::string extension = assetList[ hash ].getExtension();
+					LOG_DEBUG << "unloading" << std::endl;
 					workPool.Enqueue( [ this, hash, extension ]()
 					{
 						UnloadResource( hash, extension );
 					});
 				}
-				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
 			else
 			{
 				// error occurred
 				// remove asset instance
 				// run callbacks with tagged parameters
-				ENTER_CRITICAL_SECTION_ASSETLIST;
 				assetList.erase( hash );
 				RunCallbacks( hash, data );
-				EXIT_CRITICAL_SECTION_ASSETLIST;
 			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
 		}
 
 		void RunCallbacks( std::uint64_t hash, void* data )
@@ -203,25 +249,36 @@ namespace trr
 			}
 		}
 
-		void VolotileSetAssetState( std::uint64_t hash, RState state )
+		void VolatileSetAssetState( std::uint64_t hash, RState state )
 		{
 			assetList[ hash ].state = state;
+		}
+
+		void VolatileDeallocatePathAndExtension( std::uint64_t hash )
+		{
+			if( assetList[ hash ].loaderExtension )
+				contentAllocator.deallocate( assetList[ hash ].loaderExtension );
+			if( assetList[ hash ].path )
+				contentAllocator.deallocate( assetList[ hash ].path );
 		}
 
 		void UnloadResource( std::uint64_t hash, std::string extension )
 		{
 			if( loaders.find( extension ) != loaders.end() )
-			{						
+			{				
+				LOG_DEBUG << "checking unload" << std::endl;
 				workPool.Enqueue( [ this, extension, hash ]()
 				{
 					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
 					ENTER_CRITICAL_SECTION_ASSETLIST;
 					// the resource has been loaded while this function was loading
 					// add load call to queue
+					LOG_DEBUG << "reloading" << std::endl;
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
-						VolotileSetAssetState( hash, RState::LOADING );
+						LOG_DEBUG << "reloading" << std::endl;
+						VolatileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
 						{
@@ -230,6 +287,7 @@ namespace trr
 					}
 					else
 					{
+						VolatileDeallocatePathAndExtension( hash );
 						assetList.erase( hash );
 					}
 
@@ -243,7 +301,7 @@ namespace trr
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// class utility
 		ResourceManager()
-			: contentAllocator(MemoryBlockSize, sizeOfMemory )
+			: contentAllocator(memoryBlockSize, sizeOfMemory )
 		{
 
 			#ifdef USE_CRITICAL_SECTION_LOCK
@@ -254,6 +312,14 @@ namespace trr
 			if (!InitializeCriticalSectionAndSpinCount(&CriticalSection_zLib, CRITICAL_SECTION_FAILED_INIT))
 				return; // Should improve error handling / author
 			#endif
+
+			// calculate memory limits for metadata
+			// assume general purpose configuration: 50/50 split 
+			memoryLimit = internalMetaMemoryLimit;
+			int split = internalMetaMemoryLimit / 2;
+			callbackListSizeLimit	= split / sizeof( CallbackContainer );
+			assetListSizeLimit		= split / sizeof( std::pair< std::uint64_t, Resource > );
+			
 
 			inOutStalled = false;
 			workPool.Initialize( 2 );
@@ -337,7 +403,20 @@ namespace trr
 				else
 				{
 					assetList[ hash ].state = RState::WAITING_LOAD;
-					assetList[ hash ].path	= path;
+					char* p = (char*)contentAllocator.FlatAllocate( path.size() );
+					if( p != nullptr )
+					{
+						std::memcpy( p, path.data(), path.size() );
+						assetList[ hash ].path	= p;
+					}
+					else
+					{
+						// handle error
+						RunCallbacks( hash, CONTENT_CALLBACK_OUT_OF_MEMORY );
+						assetList.erase( hash );
+						EXIT_CRITICAL_SECTION_ASSETLIST;
+						return;
+					}
 				}
 			}
 			else if( assetList[ hash ].state != RState::READY )
@@ -384,7 +463,7 @@ namespace trr
 					if( !inOutStalled )
 					{
 						assetList[ hash ].state = RState::UNLOADING;
-						std::string extension = assetList[ hash ].loaderExtension;					
+						std::string extension = assetList[ hash ].getExtension();
 						workPool.Enqueue( [ this, hash, extension ]()
 						{
 							UnloadResource( hash, extension );
@@ -430,7 +509,7 @@ namespace trr
 					{
 						std::string path = res->second.getPath();
 						assetList[ res->second.hash ].state = RState::UNLOADING;
-						std::string extension = assetList[ res->second.hash ].loaderExtension;					
+						std::string extension = assetList[ res->second.hash ].getExtension();					
 						std::uint64_t hash = res->second.hash;
 						workPool.Enqueue( [ this, hash, extension, path ]()
 						{
@@ -463,6 +542,9 @@ namespace trr
 
 		bool			inOutStalled;
 		
+		int				memoryLimit;
+		int				callbackListSizeLimit;
+		int				assetListSizeLimit;
 
 #ifdef USE_CRITICAL_SECTION_LOCK
 		CRITICAL_SECTION CriticalSection_AssetList;
@@ -474,7 +556,6 @@ namespace trr
 		std::mutex mutex_zLib;
 #endif
 	};
-
 }
 
 #endif

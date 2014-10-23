@@ -33,7 +33,7 @@ std::string ws2s(const std::wstring& s)
 }
 
 
-void TestScenarioA()
+void TestA()
 {
 
 	int flag = 0;
@@ -164,10 +164,10 @@ void TestB()
 
 void TestC()
 {
-	trr::contentManager.GetResource( "test.txt.test" );
-	trr::contentManager.GetResource( "test.txt" );
-	trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader" );
-	trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test" );
+	trr::Resource a = trr::contentManager.GetResource( "test.txt.test" );
+	trr::Resource b = trr::contentManager.GetResource( "test.txt" );
+	trr::Resource c = trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader" );
+	trr::Resource d = trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test" );
 
 	trr::contentManager.GetResource( "test.txt.test",						[](const void* data)
 	{
@@ -196,9 +196,9 @@ int main( int argc, char* argv[] )
 
 	trr::contentManager.InitContentLib(s2ws("test.zip"));
 
-
+	TestA();
 	//TestB();
-	TestC();
+	//TestC();
 	
 
  	_CrtDumpMemoryLeaks();
