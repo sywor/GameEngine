@@ -1,5 +1,200 @@
 #include "Graphics.h"
 
+char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
+{
+	if (featureLevel == D3D_FEATURE_LEVEL_11_0)
+		return "11.0";
+	if (featureLevel == D3D_FEATURE_LEVEL_10_1)
+		return "10.1";
+	if (featureLevel == D3D_FEATURE_LEVEL_10_0)
+		return "10.0";
+
+	return "Unknown";
+}
+
+template< class ShaderClass >
+std::string GetLatestProfile(ID3D11Device* g_Device);
+
+template<>
+std::string GetLatestProfile<ID3D11VertexShader>(ID3D11Device* g_Device)
+{
+	assert(g_Device);
+
+	// Query the current feature level:
+	D3D_FEATURE_LEVEL featureLevel = g_Device->GetFeatureLevel();
+
+	switch (featureLevel)
+	{
+	case D3D_FEATURE_LEVEL_11_1:
+	case D3D_FEATURE_LEVEL_11_0:
+	{
+								   return "vs_5_0";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_10_1:
+	{
+								   return "vs_4_1";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_10_0:
+	{
+								   return "vs_4_0";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_9_3:
+	{
+								  return "vs_4_0_level_9_3";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_9_2:
+	case D3D_FEATURE_LEVEL_9_1:
+	{
+								  return "vs_4_0_level_9_1";
+	}
+		break;
+	} // switch( featureLevel )
+
+	return "";
+}
+
+template<>
+std::string GetLatestProfile<ID3D11PixelShader>(ID3D11Device* g_Device)
+{
+	assert(g_Device);
+
+	// Query the current feature level:
+	D3D_FEATURE_LEVEL featureLevel = g_Device->GetFeatureLevel();
+	switch (featureLevel)
+	{
+	case D3D_FEATURE_LEVEL_11_1:
+	case D3D_FEATURE_LEVEL_11_0:
+	{
+								   return "ps_5_0";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_10_1:
+	{
+								   return "ps_4_1";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_10_0:
+	{
+								   return "ps_4_0";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_9_3:
+	{
+								  return "ps_4_0_level_9_3";
+	}
+		break;
+	case D3D_FEATURE_LEVEL_9_2:
+	case D3D_FEATURE_LEVEL_9_1:
+	{
+								  return "ps_4_0_level_9_1";
+	}
+		break;
+	}
+	return "";
+}
+
+template< class ShaderClass >
+ShaderClass* CreateShader(ID3DBlob* pShaderBlob, ID3D11ClassLinkage* pClassLinkage, ID3D11Device* g_Device);
+
+template<>
+ID3D11VertexShader* CreateShader<ID3D11VertexShader>(ID3DBlob* pShaderBlob, ID3D11ClassLinkage* pClassLinkage, ID3D11Device* g_Device)
+{
+	HRESULT hr = S_OK;
+	assert(g_Device);
+	assert(pShaderBlob);
+
+	ID3D11VertexShader* pVertexShader = nullptr;
+	hr = g_Device->CreateVertexShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), pClassLinkage, &pVertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, "Failed to create vertex shader", "Shader Error", MB_OK);
+	}
+
+	return pVertexShader;
+}
+
+template<>
+ID3D11PixelShader* CreateShader<ID3D11PixelShader>(ID3DBlob* pShaderBlob, ID3D11ClassLinkage* pClassLinkage, ID3D11Device* g_Device)
+{
+	HRESULT hr = S_OK;
+	assert(g_Device);
+	assert(pShaderBlob);
+
+	ID3D11PixelShader* pPixelShader = nullptr;
+	hr = g_Device->CreatePixelShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), pClassLinkage, &pPixelShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, "Failed to create pixel shader", "Shader Error", MB_OK);
+	}
+
+	return pPixelShader;
+}
+
+template< class ShaderClass >
+ShaderClass* LoadShader(const std::wstring& fileName, const std::string& entryPoint, const std::string& _profile, ID3D11Device* g_Device)
+{
+	ID3DBlob* pShaderBlob = nullptr;
+	ID3DBlob* pErrorBlob = nullptr;
+	ShaderClass* pShader = nullptr;
+
+	std::string profile = _profile;
+	if (profile == "latest")
+	{
+		profile = GetLatestProfile<ShaderClass>(g_Device);
+	}
+
+	UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
+#if _DEBUG
+	flags |= D3DCOMPILE_DEBUG;
+#endif
+
+	HRESULT hr = D3DCompileFromFile(fileName.c_str(), nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), profile.c_str(),
+		flags, 0, &pShaderBlob, &pErrorBlob);
+
+	if (FAILED(hr))
+	{
+		if (pErrorBlob)
+		{
+			std::string errorMessage = (char*)pErrorBlob->GetBufferPointer();
+			//OutputDebugStringA(errorMessage.c_str());
+
+			MessageBox(NULL, errorMessage.c_str(), "Shader Error", MB_OK);
+
+
+			SafeRelease(pShaderBlob);
+			SafeRelease(pErrorBlob);
+		}
+
+		return false;
+	}
+
+	pShader = CreateShader<ShaderClass>(pShaderBlob, nullptr, g_Device);
+
+	SafeRelease(pShaderBlob);
+	SafeRelease(pErrorBlob);
+
+	return pShader;
+}
+
+void Graphics::createShader()
+{
+
+	g_vertexShader = LoadShader<ID3D11VertexShader>(L"shaders/VertexShader.hlsl", "main", "latest", g_Device);
+	g_pixelShader = LoadShader<ID3D11PixelShader>(L"shaders/PixelShader.hlsl", "main", "latest", g_Device);
+
+	if (g_vertexShader == NULL || g_pixelShader == NULL)
+	{
+		MessageBox(NULL, "Failed to create one or more shaders", "Shader Error", MB_OK);
+		PostQuitMessage(0);
+	}
+}
 
 Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 {
@@ -11,8 +206,11 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	}
 
 	createBackBuffer();
-	createShader("VertexShader", "vs_5_0");
+	//createShader();
+
+	createShader("VertexShader","vs_5_0");
 	createShader("PixelShader", "ps_5_0");
+
 	createSampler();
 	createBuffers();
 	createRasterState();
@@ -21,20 +219,13 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 
 	//------------------------------ temp variables for testing
 
-	//object = new Object();
-	//loader = new Loader();
-
-	//loader->LoadObject("Bunker.obj",0,0,0,1,object,1,1,1);
-
-	//object->InitBuffers("purple.jpg","cracked.jpg");
-
 	for (int i = 0; i < 6; i++)
 	{
 		wall[i].normal	= VECTOR4(0, 0, 1, 1);
 		wall[i].texC	= VECTOR2(i, i);
 	}
-	const float size	= 50.0f;
-	const float depth	= -10.0f;
+	const float size	= 5;
+	const float depth	= 10.0f;
 	wall[0].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
 	wall[1].pos = VECTOR4(1.0 * size,	1.0 * -size,	depth, 1);
 	wall[2].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
@@ -70,7 +261,6 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 
 }
 
-
 Graphics::~Graphics()
 {
 }
@@ -95,7 +285,6 @@ HRESULT Graphics::Update(float _deltaTime)
 
 HRESULT Graphics::Render(float _deltaTime)
 {
-	//D3DXCOLOR color = D3DXCOLOR(Cam->getCameraPosition().x, Cam->getCameraPosition().y, Cam->getCameraPosition().z,0);
 	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
 	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
 	g_DeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
@@ -120,10 +309,6 @@ HRESULT Graphics::Render(float _deltaTime)
 
 	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
 	g_DeviceContext->Draw(6,0);
-
-	//g_DeviceContext->IASetVertexBuffers(0, 1, object->getBuffer(), &strides,&offset );
-	//g_DeviceContext->Draw(3000,0);
-
 
 
 	// Presenting swapchain
@@ -211,7 +396,7 @@ void Graphics::createShader(std::string _shader, std::string _shaderModel)
 {
 	HRESULT result = S_OK;
 	ID3DBlob* shaderBlob = NULL;
-	std::string path = "";
+	std::string path = "shaders/";
 	std::string file = path + _shader + ".cso";
 
 	std::wstring wfile;
@@ -239,20 +424,6 @@ void Graphics::createShader(std::string _shader, std::string _shaderModel)
 
 		}
 		createInputLayout(shaderBlob, g_vertexLayout);
-		shaderBlob->Release();
-	}
-	if (_shaderModel == "gs_5_0")
-	{
-		result = g_Device->CreateGeometryShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL, &g_geometryShader);
-		if (FAILED(result))
-		{
-			std::string text = "Failed to create " + _shader;
-			MessageBox(NULL, text.c_str(), "Shader Error", MB_OK);
-			PostQuitMessage(0);
-
-		}
-		//createInputLayout(shaderBlob, g_geometryLayout);
-
 		shaderBlob->Release();
 	}
 	if (_shaderModel == "ps_5_0")
@@ -492,17 +663,6 @@ void Graphics::createBlendState()
 
 }
 
-char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
-{
-	if (featureLevel == D3D_FEATURE_LEVEL_11_0)
-		return "11.0";
-	if (featureLevel == D3D_FEATURE_LEVEL_10_1)
-		return "10.1";
-	if (featureLevel == D3D_FEATURE_LEVEL_10_0)
-		return "10.0";
-
-	return "Unknown";
-}
 
 HRESULT Graphics::InitDevice(HWND _hwnd)
 {

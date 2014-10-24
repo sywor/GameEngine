@@ -1,16 +1,10 @@
 #pragma once
 #include "stdafx.h"
-#include "Camera.h"
 
-//--------------------------------- temp includes for testing
-
-//#include "Object.h"
-//#include "Loader.h"
 #include "ICamera.h"
 #include "XMCamera.h"
-//---------------------------------
 
-
+#define SafeRelease(x) if(x) x->Release() ; x = NULL;
 
 
 
@@ -45,7 +39,11 @@ private:
 
 	HRESULT InitDevice(HWND _hwnd);
 	void createBackBuffer();
+
+	void createShader();
 	void createShader(std::string _shader, std::string _shaderModel);
+
+
 	void createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layout);
 	void createSampler();
 	void createBuffers();
@@ -60,10 +58,7 @@ private:
 	ID3D11RenderTargetView*  g_backBuffer = NULL;
 	ID3D11VertexShader* g_vertexShader = NULL;
 	ID3D11InputLayout* g_vertexLayout = NULL;
-	ID3D11GeometryShader* g_geometryShader = NULL;
-	ID3D11InputLayout* g_geometryLayout = NULL;
 	ID3D11PixelShader* g_pixelShader = NULL;
-	ID3D11InputLayout* g_pixelLayout = NULL;
 	ID3D11SamplerState *samLinear = NULL;
 	D3D11_VIEWPORT viewport;
 	ID3D11BlendState* g_blendState = NULL;

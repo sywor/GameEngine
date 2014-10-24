@@ -2,8 +2,8 @@
 
 solution "q_ge_project_2"
     configurations { "Debug", "Release" }
-        flags{ "Unicode", "NoPCH" } 
-        libdirs { "lib" }
+        flags{  "NoPCH" } 
+        libdirs { "lib" ,"$(LibraryPath);$(DXSDK_DIR)Lib\x86"}
         includedirs { "include" }
     
         local location_path = "solution"
@@ -20,11 +20,11 @@ solution "q_ge_project_2"
 	
     configuration { "Debug" }
         defines { "DEBUG" }
-        flags { "Symbols" }
+        flags { "Symbols", "WinMain" }
         
     configuration { "Release" }
         defines { "NDEBUG", "RELEASE" }
-        flags { "Optimize", "FloatFast" }
+        flags { "Optimize", "FloatFast", "WinMain" }
 
 		
     configuration { "Debug" }
@@ -39,20 +39,21 @@ solution "q_ge_project_2"
 		debugdir ""
 		location ( location_path )
 		language "C++"
-		kind "ConsoleApp"
+		kind "WindowedApp"
 		files { "src/core/**.cpp", "src/core/**.hpp", "src/core/**.h", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h"}
 		includedirs { "src/core", "include", "src/shared" }
-		links { "SDL2", "SDL2main", "SDL2test", "glew32", "opengl32", "gfx", "logger", "assimp", "lua51", "zlib" }
+		links { "gfx", "logger", "assimp", "lua51", "zlib" }
 		
 	
 	project "gfx"
 		location ( location_path )
 		language "C++"
 		kind "SharedLib"
-		files { "src/gfx/**.hpp", "src/gfx/**.h", "src/gfx/**.cpp", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h", "shaders/**.glsl" }
-		includedirs { "src/gfx", "include", "src/shared" }
+		files { "src/gfx/**.hpp", "src/gfx/**.h", "src/gfx/**.cpp", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h", "shaders/**.hlsl" }
+		includedirs { "src/gfx", "include", "src/shared", "$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include"}
 		defines { "GFX_DLL_EXPORT" }
-		links { "SDL2", "SDL2main", "SDL2test", "glew32", "opengl32", "logger" }
+		links { "d3d11", "d3dcompiler", "dxguid", "winmm", "logger" }
+		
 		
 	project "logger"
 		location ( location_path )
