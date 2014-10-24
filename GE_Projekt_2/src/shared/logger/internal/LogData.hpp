@@ -124,6 +124,9 @@ LogSystem::LogData& operator<< ( const LogSystem::LogData& data, const T& obj )
 
 /****** Add Logger channels below ******/
 #define LOG_DEBUG		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 1,		"debug" )
+#define LOG_CONTENT		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 1,		"contentHandler    " )
+#define LOG_LEVEL		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 1,		"levelHandler  " )
+
 #define LOG_WARNING		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 10,	"warning" )
 #define LOG_ERROR		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 20,	"error" )
 #define LOG_FATAL		LogSystem::LogData( LogSystem::LogType::LogType_ToConsole | LogSystem::LogType::LogType_ToClop | LogSystem::LogType::LogType_ToFile, 30,	"fatal" )

@@ -33,65 +33,70 @@ std::string ws2s(const std::wstring& s)
 }
 
 
-void TestA()
+void Test_Async_Loading_Unloading()
 {
 
-	int flag = 0;
+	volatile int flag = 0;
 
 	// add a
 	trr::Entity a =  trr::entityHandler.CreateEntity();
+	LOG_LEVEL << "loading assets for entity " << a << std::endl;
 	trr::contentManager.GetResource("test.txt.test", [ a ]( const void* data )
 	{
 		if( trr::entityHandler.GetIndex( a ) != -1 )
 		{
-			LOG_DEBUG << a << " is alive in callback. " << std::endl;
+			LOG_CONTENT << "entity " << a << " is alive in callback. " << std::endl;
 		}
 		else
 		{
-			LOG_DEBUG << a << " is dead in callback. " << std::endl;
+			LOG_CONTENT << "entity " << a << " is dead in callback. " << std::endl;
 		}
 	});
 
 	// add b
 	trr::Entity b =  trr::entityHandler.CreateEntity();
+	LOG_LEVEL << "loading assets for entity " << b << std::endl;
 	trr::contentManager.GetResource("test.txt.test", [ b ]( const void* data )
 	{
 		if( trr::entityHandler.GetIndex( b ) != -1 )
 		{
-			LOG_DEBUG << b << " is alive in callback. " << std::endl;
+			LOG_CONTENT << "entity " << b << " is alive in callback. " << std::endl;
 		}
 		else
 		{
-			LOG_DEBUG << b << " is dead in callback. " << std::endl;
+			LOG_CONTENT << "entity " << b << " is dead in callback. " << std::endl;
 		}
 	});
 
 	// remove a
 	trr::entityHandler.RemoveEntity( a );
+	LOG_LEVEL << "Unloading assets for entity " << a << std::endl;
 	trr::contentManager.Unload( "test.txt.test" );
 	
 	// remove b
 	trr::entityHandler.RemoveEntity( b );
+	LOG_LEVEL << "Unloading assets for entity " << b << std::endl;
 	trr::contentManager.Unload( "test.txt.test" );
 
 	std::this_thread::sleep_for( std::chrono::milliseconds( 1300 ) );
 
 	// add c
 	trr::Entity c =  trr::entityHandler.CreateEntity();
+	LOG_LEVEL << "loading assets for entity " << c << std::endl;
 	trr::contentManager.GetResource("test.txt.test", [ c, &flag ]( const void* data )
 	{
 		if( trr::entityHandler.GetIndex( c ) != -1 )
 		{
-			LOG_DEBUG << c << " is alive in callback. " << std::endl;
+			LOG_CONTENT << "entity " << c << " is alive in callback. " << std::endl;
 		}
 		else
 		{
-			LOG_DEBUG << c << " is dead in callback. " << std::endl;
+			LOG_CONTENT << "entity " << c << " is dead in callback. " << std::endl;
 		}
 		flag = 1;
 	});
 
-	LOG_DEBUG << "main thread continues" << std::endl;
+	LOG_LEVEL << "main thread continues" << std::endl;
 	
 	while (flag == 0);
 	flag = 0;
@@ -99,21 +104,25 @@ void TestA()
 
 	trr::contentManager.DumpAssetList();
 
-	LOG_DEBUG << "TestA finished" << std::endl;
+	trr::contentManager.Unload("test.txt.test");
+	// wait for unload to finish before next test.
+	std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 
+	LOG_DEBUG << "Async_Loading_Unloading test finished" << std::endl;
 }
 
 
 
 
-void TestB()
+void Test_Level_Loading_Unloading()
 {
-	int flag = 0;
+	volatile int flag = 0;
 	trr::Entity temp;
 
 	std::vector< trr::Entity > entities;
 
 	// load level A
+	LOG_LEVEL << "Loading level A" << std::endl;
 	for( int i = 0; i < 100; i++ )
 	{
 		temp =  trr::entityHandler.CreateEntity();
@@ -125,12 +134,14 @@ void TestB()
 		entities.push_back( temp );
 	}
 
-	//std::this_thread::sleep_for( std::chrono::milliseconds( 1000 ) );
+	std::this_thread::sleep_for( std::chrono::milliseconds( 1200 ) );
+	trr::contentManager.DumpAssetList();
 
 	// stall resource manager
 	trr::contentManager.StallLoading();
 
 	// unload level A
+	LOG_LEVEL << "Unload level A" << std::endl;
 	for( int i = 0; i < 100; i++ )
 	{
 		trr::contentManager.Unload( "test.txt.test" );
@@ -143,6 +154,7 @@ void TestB()
 	entities.clear();
 
 	// load level B
+	LOG_LEVEL << "Loading level B" << std::endl;
 	for( int i = 0; i < 100; i++ )
 	{
 		temp =  trr::entityHandler.CreateEntity();
@@ -157,34 +169,77 @@ void TestB()
 	// resume resource manager
 	trr::contentManager.RunLoading();
 
+	std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+	trr::contentManager.DumpAssetList();
+
+	// unload level B
+	LOG_LEVEL << "Unload level B" << std::endl;
+	for (int i = 0; i < 100; i++)
+	{
+		trr::contentManager.Unload("test2.txt.test");
+		trr::contentManager.Unload("test3.txt.test");
+	}
+	for (int i = 0; i < entities.size(); i++)
+	{
+		trr::entityHandler.RemoveEntity(entities[i]);
+	}
+	entities.clear();
+
 	std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) );
 
 
-	LOG_DEBUG << "TestB finished" << std::endl;
+	LOG_LEVEL << "Level_Loading_Unloading test finished" << std::endl;
+}
+
+void CheckData(std::string path, const void* data)
+{
+	if (CONTENT_CHECK_VALID_DATA(data))
+	{
+		LOG_CONTENT << path << " was loaded correctly" << std::endl;
+	}
+	else
+	{
+		if (data == CONTENT_CALLBACK_CAN_NOT_FIND_FILE)
+		{
+			LOG_CONTENT << path << " : could not find file." << std::endl;
+		}
+		else if (data == CONTENT_CALLBACK_LOADING_FAILED)
+		{
+			LOG_CONTENT << path << " : loading failed" << std::endl;
+		}
+		else if (data == CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE)
+		{
+			LOG_CONTENT << path << " : format not supported" << std::endl;
+		}
+		else if (data == CONTENT_CALLBACK_OUT_OF_MEMORY)
+		{
+			LOG_CONTENT << path << " : content system is out of memory" << std::endl;
+		}
+	}
 }
 
 
-void TestC()
+void Test_Error_Handling()
 {
+	LOG_LEVEL << "Loading " << "test.txt.test" << std::endl;
 	trr::Resource a = trr::contentManager.GetResource( "test.txt.test" );
+
+	LOG_LEVEL << "Loading " << "test.txt" << std::endl;
 	trr::Resource b = trr::contentManager.GetResource( "test.txt" );
+
+	LOG_LEVEL << "Loading " << "test.txt.notGoingToFindThisLoader" << std::endl;
 	trr::Resource c = trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader" );
+
+	LOG_LEVEL << "Loading " << "notGoingToFindThisFile.txt.test" << std::endl;
 	trr::Resource d = trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test" );
 
-	trr::contentManager.GetResource( "test.txt.test",						[](const void* data)
-	{
-		if( CONTENT_CHECK_VALID_DATA( data ) )
-		{
-			// use
-		}
-		else
-		{
-			// error handing
-		}
-	});
-	trr::contentManager.GetResource( "test.txt",							[](const void* data){} );
-	trr::contentManager.GetResource( "test.txt.notGoingToFindThisLoader",	[](const void* data){} );
-	trr::contentManager.GetResource( "notGoingToFindThisFile.txt.test",		[](const void* data){} );
+	
+	CheckData( "test.txt.test", a.getData());
+	CheckData( "test.txt", b.getData());
+	CheckData( "test.txt.notGoingToFindThisLoader", c.getData());
+	CheckData( "notGoingToFindThisFile.txt.test", d.getData());
+
+	LOG_LEVEL << "Level_Loading_Unloading test finished" << std::endl;
 }
 
 
@@ -198,7 +253,12 @@ int main( int argc, char* argv[] )
 
 	trr::contentManager.InitContentLib(s2ws("test.zip"));
 
-	TestA();
+	Test_Async_Loading_Unloading();
+	LOG_DEBUG << std::endl;
+	Test_Level_Loading_Unloading();
+	LOG_DEBUG << std::endl;
+	Test_Error_Handling();
+	
 	//TestB();
 	//TestC();
 	

@@ -23,7 +23,7 @@ private:
 
 
 protected:
-	void checkMerge(unsigned int i);
+	void checkMerge( int i);
 	int insertOpenList( MemIndex t );
 	int insertClosedList( MemIndex t );
 	void* closeMemory(unsigned int i, uint size_in_bytes);

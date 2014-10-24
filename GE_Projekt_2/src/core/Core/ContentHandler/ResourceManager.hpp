@@ -203,6 +203,7 @@ namespace trr
 				// check if unloaded while loading
 				if( assetRef.nrReferences == 0 )
 				{					
+					LOG_CONTENT << "Loaded content has no references, unloaded." << std::endl;
 					std::string extension = assetList[ hash ].getExtension();
 					workPool.Enqueue( [ this, hash, extension ]()
 					{
@@ -264,6 +265,7 @@ namespace trr
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
+						LOG_CONTENT << "Unloaded content still has references, reloading." << std::endl;
 						VolatileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
@@ -333,7 +335,7 @@ namespace trr
 			ENTER_CRITICAL_SECTION_ASSETLIST;
 			for( auto res = assetList.begin(); res != assetList.end(); res++ )
 			{
-				LOG_DEBUG <<  "asset dump - nrRefs: " << res->second.getReferences() << "  " << res->second.getPath() << std::endl;
+				LOG_CONTENT << "asset dump - nrRefs: " << res->second.getReferences() << "  " << res->second.getPath() << std::endl;
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 		}
@@ -476,6 +478,7 @@ namespace trr
 					{
 						assetList[ hash ].state = RState::UNLOADING;
 						std::string extension = assetList[ hash ].getExtension();
+						LOG_CONTENT << "Tagging file for unloading: " << assetList[ hash ].getPath() << std::endl;
 						workPool.Enqueue( [ this, hash, extension ]()
 						{
 							UnloadResource( hash, extension );
@@ -512,7 +515,8 @@ namespace trr
 		void RunLoading()
 		{
 			ENTER_CRITICAL_SECTION_ASSETLIST;
-			inOutStalled = true;
+			inOutStalled = false;
+			LOG_CONTENT << "	Counting references after stall" << std::endl;
 			for( auto res = assetList.begin(); res != assetList.end(); res++ )
 			{
 				if( res->second.nrReferences == 0 )
@@ -520,6 +524,7 @@ namespace trr
 					if( res->second.state == RState::READY )
 					{
 						std::string path = res->second.getPath();
+						LOG_CONTENT << "	Counting references, unloading: " << path << std::endl;
 						assetList[ res->second.hash ].state = RState::UNLOADING;
 						std::string extension = assetList[ res->second.hash ].getExtension();					
 						std::uint64_t hash = res->second.hash;
@@ -532,6 +537,7 @@ namespace trr
 				else if( res->second.state == RState::WAITING_LOAD )
 				{
 					std::string path = res->second.getPath();
+					LOG_CONTENT << "	Counting references, loading: " << path << std::endl;
 					workPool.Enqueue( [ this, path ]()
 					{
 						LoadResource( path );
@@ -581,11 +587,11 @@ namespace trr
 
 	v thread safe.
 	v hard limit memory usage.
-	- unload assets to free memory.
+	~ unload assets to free memory.
 	v dump list of currently loaded memory.
-	- test loaders
+	v test loaders
 	v guid
-	- stress scenario
+	v stress scenario
 
 */
 

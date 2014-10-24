@@ -73,7 +73,7 @@ namespace trr
 		std::mutex m_waitMutex;
 		std::condition_variable m_waitCondition;
 	
-		bool m_stop;
+		volatile bool m_stop;
 		int m_nrJobsInProgress;
 	};
 }

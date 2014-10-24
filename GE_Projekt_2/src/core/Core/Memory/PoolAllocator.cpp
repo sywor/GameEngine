@@ -17,7 +17,7 @@ bool PoolAllocator::internal_init( uint32_t size_in_bytes )
 	return true;
 }
 
-void PoolAllocator::checkMerge(unsigned int i)
+void PoolAllocator::checkMerge( int i )
 {
 	auto& list( openList );
 	if( i + 1 > list.size() )
@@ -36,14 +36,14 @@ void PoolAllocator::checkMerge(unsigned int i)
 				list.erase( list.begin() + i );
 				insertOpenList( t );
 			}
-			else if( i - 1 > 0 && list[i-1].size == list[i].size )
+			else if( i - 1 > 0 && list[i - 1].size == list[i].size) 
 			{
-				if( (uint)list[i-1].memory + (uint)list[i].size == (uint)list[i].memory )
+				if ((uint)list[i - 1].memory + (uint)list[i].size == (uint)list[i].memory)
 				{
-					MemIndex t( list[i-1].memory, list[i].size * 2 );
-					list.erase( list.begin() + i - 1 );
-					list.erase( list.begin() + i - 1 );
-					insertOpenList( t );
+					MemIndex t(list[i - 1].memory, list[i].size * 2);
+					list.erase(list.begin() + i - 1);
+					list.erase(list.begin() + i - 1);
+					insertOpenList(t);
 				}
 			}
 		}
