@@ -6,8 +6,9 @@
 #include <utility/HighresTimer.hpp>
 #include <logger/Logger.hpp>
 #include <Systems/TestSystem.hpp>
-//#include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
+#include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
 #include <Core\ContentHandler\ContainerLoaders\Gun.hpp>
+#include <Core\ContentHandler\ContainerLoaders\ZipHandler.hpp>
 
 #include <Core\ContentHandler\ResourceManager.hpp>
 
@@ -188,6 +189,16 @@ int main( int argc, char* argv[] )
 	//Potato::Gun gun(allocator);
 	//gun.Load("zlib128-dll.Spud");	
 	//void* v = gun.Shoot("test/minigzip_d.exe");
+
+	ossianTest::ZipReader z;
+
+
+	//PoolAllocator* pool = new PoolAllocator(8, 1024);
+	//ZipFile zip(pool);
+	//zip.Load(s2ws("test.zip"));
+
+	z.Load("test.zip");
+
 
  	_CrtDumpMemoryLeaks();
 	//utilities::pause();

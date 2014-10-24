@@ -4,24 +4,21 @@
 #include <map>
 #include <vector>
 
-namespace Potato
+class Asset
 {
-	class Asset
-	{
-		friend class Gun;
+	friend class Gun;
 
-	public:
-		Asset();
-		~Asset();
+public:
+	Asset();
+	~Asset();
 
-	private:
-		Asset(std::string _name, uint _startByte, uint _size);
+private:
+	Asset(std::string _name, uint _startByte, uint _size);
 
-		std::string GetName();
-		uint GetSize();
-		uint GetStart();
+	std::string GetName();
+	uint GetSize();
+	uint GetStart();
 
-		std::string name;
-		uint size, startByte;
-	};
-}
+	std::string name;
+	uint size, startByte;
+};

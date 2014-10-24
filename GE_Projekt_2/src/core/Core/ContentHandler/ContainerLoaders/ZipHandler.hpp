@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include <Core\Memory\PoolAllocator.h>
 
 #define DELETE_ARRAY(x) if(x) delete[] x; x = NULL;
 
@@ -22,13 +23,13 @@ private:
 	struct TZipDirFileHeader;
 	struct TZipLocalHeader;
 
-	FILE*			m_pFile;	// Zip file
-	char*			m_pDirData;	// Raw data buffer.
-	int				m_nEntries;	// Number of entries.
-	PoolAllocator*	allocator;
+	FILE*				m_pFile;	// Zip file
+	char*				m_pDirData;	// Raw data buffer.
+	int					m_nEntries;	// Number of entries.
+	PoolAllocator*		allocator;
 
 	// Pointers to the dir entries in pDirData.
-	const TZipDirFileHeader **m_papDir;
+	const TZipDirFileHeader** m_papDir;
 
 	int Find(const std::string &path) const;
 	int GetFileLen(int i) const;

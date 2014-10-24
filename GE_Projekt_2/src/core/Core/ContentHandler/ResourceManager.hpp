@@ -9,7 +9,7 @@
 
 #include "../Memory/DefaultAllocator.h"
 #include <Core/ContentHandler/MurrMurr64.hpp>
-#include <Core/ContentHandler/ZipHandler.hpp>
+//#include <Core/ContentHandler/ZipHandler.hpp>
 #include <Core/ContentHandler/DataContainer.hpp>
 #include <Core/ContentHandler/CallbackContainer.hpp>
 #include <Core/ThreadPool/Threadpool.hpp>
@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <map>
 
 #define CONTENT_CALLBACK_CAN_NOT_FIND_FILE			(void*)1
 #define CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE		(void*)2
@@ -30,7 +31,7 @@
 													&& dataPointer != CONTENT_CALLBACK_LOADING_FAILED \
 													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE \
 													&& dataPointer != CONTENT_CALLBACK_OUT_OF_MEMORY \
-													&& datapointer != CONTENT_CALLBACK_INVALID_COMPRESSION )
+													&& dataPointer != CONTENT_CALLBACK_INVALID_COMPRESSION )
 
 #ifdef USE_ASYNC_LOCKING
 #ifdef USE_CRITICAL_SECTION_LOCK
@@ -115,23 +116,23 @@ namespace trr
 			if (loaders.find(ext) != loaders.end())
 			{
 				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
+				//int zipId = contentZipFile.Find(fileName);
 				bool zipReadResult = false;
 				DataContainer rawData;
 
-				if (zipId != -1)
-				{
-					int fileLength = contentZipFile.GetFileLen(zipId);
-					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-					if( rawData.data == nullptr )
-					{
-						data = CONTENT_CALLBACK_OUT_OF_MEMORY;
-					}
-					else
-					{
-						zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
-					}
-				}
+				//if (zipId != -1)
+				//{
+				//	int fileLength = contentZipFile.GetFileLen(zipId);
+				//	rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
+				//	if( rawData.data == nullptr )
+				//	{
+				//		data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+				//	}
+				//	else
+				//	{
+				//		zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
+				//	}
+				//}
 				EXIT_CRITICAL_SECTION_ZLIB;
 
 				if( zipReadResult )
@@ -245,7 +246,7 @@ namespace trr
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// class utility
 		ResourceManager()
-			: contentAllocator(MemoryBlockSize, sizeOfMemory )
+			: contentAllocator(MemoryBlockSize, sizeOfMemory)//, contentZipFile(&contentAllocator)
 		{
 
 			#ifdef USE_CRITICAL_SECTION_LOCK
@@ -261,7 +262,6 @@ namespace trr
 			workPool.Initialize( 2 );
 			ResourceLoader::SetAllocator(&contentAllocator);
 			InitializeArrayWithNew< LoadersDef... >( &loaders, &contentAllocator );
-			contentZipFile = ZipFile(contentAllocator);
 		}
 
 		~ResourceManager()
@@ -274,7 +274,7 @@ namespace trr
 		bool InitContentLib(const std::wstring contentLib)
 		{
 			ENTER_CRITICAL_SECTION_GENERAL;
-			bool result = contentZipFile.Init(contentLib);
+			//bool result = contentZipFile.Init(contentLib);
 			EXIT_CRITICAL_SECTION_GENERAL;
 			return result;
 		}
@@ -461,7 +461,7 @@ namespace trr
 		
 
 		PoolAllocator	contentAllocator;
-		ZipFile			contentZipFile;
+		//ZipFile			contentZipFile;
 		ThreadPool		workPool;
 
 		bool			inOutStalled;

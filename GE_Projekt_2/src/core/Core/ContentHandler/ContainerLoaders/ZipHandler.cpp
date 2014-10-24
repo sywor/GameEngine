@@ -13,7 +13,6 @@
 #include <zlib/zlib.h>
 #include <string.h>
 #include <cassert>
-#include <Core\Memory\PoolAllocator.h>
 #include <Core\ContentHandler\ResourceManager.hpp>
 
 
@@ -130,6 +129,10 @@ bool ZipFile::Load(const std::wstring &resFileName)
 
 	// Assuming no extra comment at the end, read the whole end record.
 	TZipDirHeader dh;
+
+	int i = sizeof(TZipDirHeader);
+	int j = sizeof(TZipLocalHeader);
+	int k = sizeof(TZipDirFileHeader);
 
 	fseek(m_pFile, -(int)sizeof(dh), SEEK_END);
 
