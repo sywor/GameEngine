@@ -277,3 +277,22 @@
 //
 //	return 0;
 //}
+
+/*
+#include <Core/ContentHandler/ResourceManager.hpp>
+#include <Core/ContentHandler/ResourceLoader.hpp>
+#include <Core/ContentHandler/Resource.hpp>
+#include <Core/ContentHandler/Loaders/TestLoader.hpp>
+
+typedef trr::TestLoader TempLoader;
+typedef trr::ResourceManager< 1024, 8, TempLoader, TempLoader > ExampleHandler;
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	ExampleHandler handler;
+
+
+
+	return 0;
+}
+*/
