@@ -190,14 +190,12 @@ int main( int argc, char* argv[] )
 	//gun.Load("zlib128-dll.Spud");	
 	//void* v = gun.Shoot("test/minigzip_d.exe");
 
-	ossianTest::ZipReader z;
+	ZipReader z("zlib128-dll.zip");
 
 
 	//PoolAllocator* pool = new PoolAllocator(8, 1024);
 	//ZipFile zip(pool);
 	//zip.Load(s2ws("test.zip"));
-
-	z.Load("test.zip");
 
 
  	_CrtDumpMemoryLeaks();

@@ -6,6 +6,7 @@
 class Directory
 {
 	friend class Gun;
+	friend class ZipReader;
 
 public:
 	Directory();
@@ -18,6 +19,8 @@ private:
 	void AddAsset(std::string _name, Asset* _asset);
 	std::string GetName();
 	Asset* ReadAsset(const std::vector<std::string>& _path, uint _index);
+	bool SubDirectoryExist(std::string _name);
+	Directory* GetSubDirectory(std::string _name);
 
 	std::map<std::string, Directory*> subDirectories;
 	std::map<std::string, Asset*> assets;

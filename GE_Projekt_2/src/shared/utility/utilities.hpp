@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <limits>
+#include <sstream>
+#include <vector>
 
 typedef unsigned int uint;
 
@@ -17,6 +19,20 @@ namespace utilities
 	static void print(std::string _msg)
 	{
 		std::cout << _msg.c_str() << std::endl;
+	}
+
+	static std::vector<std::string> split(const std::string& _str, char _delim) 
+	{
+		std::vector<std::string> result;
+		std::stringstream ss(_str);
+		std::string item;
+
+		while (std::getline(ss, item, _delim)) 
+		{
+			result.push_back(item);
+		}
+
+		return result;
 	}
 
 	//std::wstring s2ws(const std::string& s)

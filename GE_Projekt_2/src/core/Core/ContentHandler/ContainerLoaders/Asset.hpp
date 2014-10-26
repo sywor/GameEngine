@@ -7,6 +7,7 @@
 class Asset
 {
 	friend class Gun;
+	friend class ZipReader;
 
 public:
 	Asset();

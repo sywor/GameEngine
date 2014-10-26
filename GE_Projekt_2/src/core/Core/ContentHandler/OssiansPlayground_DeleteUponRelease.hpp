@@ -2,28 +2,31 @@
 
 #include <utility/utilities.hpp>
 #include <string>
+#include "Core/ContentHandler/ContainerLoaders/Directory.hpp"
+#include "Core/ContentHandler/ContainerLoaders/Asset.hpp"
 
-namespace ossianTest
+
+typedef unsigned long dword;
+typedef unsigned short word;
+typedef unsigned char byte;
+
+class ZipReader
 {
-	typedef unsigned long dword;
-	typedef unsigned short word;
-	typedef unsigned char byte;
+public:
+	ZipReader(const std::string& _fileName);
+	~ZipReader();
 
-	class ZipReader
-	{
-	public:
-		ZipReader();
-		~ZipReader();
+private:
 
-		void Load(const std::string& _fileName);
+	struct ZipDirEndHeader;
+	struct ZipCentralDirectoryHeader;
+	struct ZipLocalHeader;
+	struct ZipDataDescriptor;
+	struct ZipFullHeader;
 
-	private:
+	std::string fileName;
+	Directory* root;
 
-		struct ZipDirEndHeader;
-		struct ZipDirFileHeader;
-		struct ZipLocalHeader;
-		struct ZipDataDescriptor;
-
-		std::string fileName;
-	};
-}
+	void CreateSubDirectory(Directory* _root, const std::vector<std::string> _path, uint _index);
+	void AddAssetToDirectory(Directory* _root, const std::vector<std::string> _path, ZipFullHeader _head, uint _index);
+};

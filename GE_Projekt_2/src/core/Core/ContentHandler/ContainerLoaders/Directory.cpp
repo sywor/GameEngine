@@ -48,3 +48,16 @@ Asset* Directory::ReadAsset(const std::vector<std::string>& _path, uint _index)
 
 	return nullptr;
 }
+
+bool Directory::SubDirectoryExist(std::string _name)
+{
+	if(subDirectories.find(_name) != subDirectories.end())
+		return true;
+
+	return false;
+}
+
+Directory* Directory::GetSubDirectory(std::string _name)
+{
+	return subDirectories[_name];
+}
