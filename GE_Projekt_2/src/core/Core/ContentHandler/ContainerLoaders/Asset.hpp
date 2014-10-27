@@ -6,7 +6,7 @@
 
 class Asset
 {
-	friend class Gun;
+	friend class PotatoGun;
 	friend class ZipReader;
 
 public:

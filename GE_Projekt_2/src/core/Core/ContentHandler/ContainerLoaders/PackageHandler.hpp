@@ -1,10 +1,9 @@
 #pragma once
 
-class PackageHandler
-{
-private:
-protected:
-public:
+#include <Core/ContentHandler/ContainerLoaders/PackageHandle.hpp>
 
-	void	Initialize(PackageHandler* _handler);
+class packageHandler
+{
+	DataContainer ReadAsset(const std::string& _assetName);
+	DataContainer ReadAllAssetsInDir(const std::string& _directoryName);
 };

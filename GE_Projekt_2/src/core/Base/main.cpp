@@ -7,7 +7,7 @@
 #include <logger/Logger.hpp>
 #include <Systems/TestSystem.hpp>
 #include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
-#include <Core\ContentHandler\ContainerLoaders\Gun.hpp>
+#include <Core\ContentHandler\ContainerLoaders\PotatoGun.hpp>
 #include <Core\ContentHandler\ContainerLoaders\ZipHandler.hpp>
 
 #include <Core\ContentHandler\ResourceManager.hpp>
