@@ -2,7 +2,7 @@
 
 #include <Core/ContentHandler/ContainerLoaders/PackageHandle.hpp>
 
-class PotatoGun : PackageHandle
+class PotatoGun : public PackageHandle
 {
 public:
 	PotatoGun(PoolAllocator* _allocator);

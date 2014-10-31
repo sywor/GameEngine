@@ -8,10 +8,12 @@
 #include <Systems/TestSystem.hpp>
 #include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
 #include <Core\ContentHandler\ContainerLoaders\PotatoGun.hpp>
-
 #include <Core\ContentHandler\ResourceManager.hpp>
-
 #include <crtdbg.h>
+
+#include <Core/ContentHandler/ContainerLoaders/ZipReader.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PotatoGun.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PackageHandler.hpp>
 
 std::wstring s2ws(const std::string& s)
 {
@@ -183,18 +185,18 @@ int main( int argc, char* argv[] )
 
 	//TestB();
 	//TestC();
-	//PoolAllocator* allocator;
 
-	//Potato::Gun gun(allocator);
-	//gun.Load("zlib128-dll.Spud");	
-	//void* v = gun.Shoot("test/minigzip_d.exe");
+	PoolAllocator* allocator = new PoolAllocator(8, 1024);
+	PotatoGun* pg = allocator->allocate<PotatoGun>(allocator);
+	ZipReader* zr = allocator->allocate<ZipReader>(allocator);
+	pg->LoadPackage("zlib128-dll.Spud");
+	zr->LoadPackage("zlib128-dll.zip");
 
-	//ZipReader z("zlib128-dll.zip");
+	packageHandler ph;
+	ph.AddHandle(pg);
+	ph.AddHandle(zr);
 
-
-	//PoolAllocator* pool = new PoolAllocator(8, 1024);
-	//ZipFile zip(pool);
-	//zip.Load(s2ws("test.zip"));
+	int i = 0;
 
 
  	_CrtDumpMemoryLeaks();

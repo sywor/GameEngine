@@ -7,7 +7,7 @@ typedef unsigned long dword;
 typedef unsigned short word;
 typedef unsigned char byte;
 
-class ZipReader : PackageHandle
+class ZipReader : public PackageHandle
 {
 public:
 	ZipReader(PoolAllocator* _allocator);
