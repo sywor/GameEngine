@@ -8,6 +8,7 @@ class Asset
 {
 	friend class PotatoGun;
 	friend class ZipReader;
+	friend class PackageHandle;
 
 public:
 	Asset();

@@ -1,9 +1,7 @@
-#include <fstream>
-#include <sstream>
 #include <Core\ContentHandler\ResourceManager.hpp>
 #include "PotatoGun.hpp"
 
-PotatoGun::PotatoGun(PoolAllocator* _allocator) : root(nullptr), packageName("N/A"), allocator(_allocator)
+PotatoGun::PotatoGun(PoolAllocator* _allocator) : PackageHandle(_allocator)
 {
 
 }
@@ -118,38 +116,4 @@ uint PotatoGun::ReadUint(void* _data, uint& _readPointer)
 	_readPointer += sizeof(uint);
 
 	return result;
-}
-
-DataContainer PotatoGun::ReadAsset(const std::string& _assetName)
-{
-	std::vector<std::string> path;
-	std::stringstream ss(_assetName);
-	std::string item;
-	std::ifstream fs;
-
-	while (std::getline(ss, item, '/'))
-	{
-		path.push_back(item);
-	}
-
-	Asset* a = root->ReadAsset(path, 0);
-
-	if (a == nullptr)
-		return DataContainer(PackageResult::FILE_NOT_FOUND);
-
-	fs.open(packageName.c_str(), std::ifstream::binary);
-	char* result = allocator->allocate<char>(a->GetSize());
-
-	if (result == nullptr)
-		return DataContainer(PackageResult::OUT_OF_MEMORY);
-
-	fs.seekg(a->GetStart());
-	fs.read(result, a->GetSize());
-
-	return DataContainer(result, a->GetSize());
-}
-
-std::vector<DataContainer> PotatoGun::ReadAllAssetsInDir(const std::string& _directoryName)
-{
-
 }

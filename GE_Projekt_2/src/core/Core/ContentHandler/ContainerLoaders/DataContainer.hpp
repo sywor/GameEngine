@@ -1,11 +1,12 @@
 #pragma once
 #include <cstdint>
 #include <Core/ContentHandler/ContainerLoaders/PackageResult.hpp>
+#include <utility/utilities.hpp>
 
 struct DataContainer
 {
 	char* data;
-	std::uint64_t size;
+	uint size;
 	PackageResult err;
 
 	DataContainer()
@@ -22,7 +23,7 @@ struct DataContainer
 		err = _err;
 	}
 
-	DataContainer(char* _data, std::uint64_t _size)
+	DataContainer(char* _data, uint _size)
 	{
 		data = _data;
 		size = _size;

@@ -8,7 +8,6 @@
 #include <Systems/TestSystem.hpp>
 #include <Core\ContentHandler\OssiansPlayground_DeleteUponRelease.hpp>
 #include <Core\ContentHandler\ContainerLoaders\PotatoGun.hpp>
-#include <Core\ContentHandler\ContainerLoaders\ZipHandler.hpp>
 
 #include <Core\ContentHandler\ResourceManager.hpp>
 
@@ -190,7 +189,7 @@ int main( int argc, char* argv[] )
 	//gun.Load("zlib128-dll.Spud");	
 	//void* v = gun.Shoot("test/minigzip_d.exe");
 
-	ZipReader z("zlib128-dll.zip");
+	//ZipReader z("zlib128-dll.zip");
 
 
 	//PoolAllocator* pool = new PoolAllocator(8, 1024);

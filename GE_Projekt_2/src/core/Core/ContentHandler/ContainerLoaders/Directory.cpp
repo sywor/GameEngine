@@ -49,6 +49,20 @@ Asset* Directory::ReadAsset(const std::vector<std::string>& _path, uint _index)
 	return nullptr;
 }
 
+std::map<std::string, Asset*> Directory::ReadAllAssetsInDir(const std::vector<std::string>& _path, uint _index)
+{
+	if ((_path.size() - 1) == _index && _path[_index] == name)
+	{
+		return assets;
+	}
+	else if (subDirectories.find(_path[_index]) != subDirectories.end())
+	{
+		return subDirectories[_path[_index]]->ReadAllAssetsInDir(_path, _index + 1);
+	}
+
+	return std::map<std::string, Asset*>();
+}
+
 bool Directory::SubDirectoryExist(std::string _name)
 {
 	if(subDirectories.find(_name) != subDirectories.end())

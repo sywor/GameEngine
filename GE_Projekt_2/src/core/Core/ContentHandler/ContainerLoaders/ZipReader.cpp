@@ -111,7 +111,7 @@ struct ZipReader::ZipFullHeader
 
 #pragma endregion
 
-ZipReader::ZipReader(PoolAllocator* _allocator) : fileName("N/A"), root(nullptr), allocator(_allocator)
+ZipReader::ZipReader(PoolAllocator* _allocator) : PackageHandle(_allocator)
 {
 
 }
@@ -120,14 +120,14 @@ ZipReader::~ZipReader()
 {
 }
 
-PackageResult ZipReader::LoadPackage(const std::string& _fileName)
+PackageResult ZipReader::LoadPackage(const std::string& _packageName)
 {
-	fileName = _fileName;
+	packageName = _packageName;
 	ZipDirEndHeader head;
 
 
 	std::ifstream fs;
-	fs.open(fileName.c_str(), std::ifstream::binary);
+	fs.open(packageName.c_str(), std::ifstream::binary);
 
 	fs.seekg(0, std::ifstream::end);
 	uint fileSize = fs.tellg();
@@ -269,14 +269,4 @@ PackageResult ZipReader::AddAssetToDirectory(Directory* _root, const std::vector
 	}
 
 	AddAssetToDirectory(_root->GetSubDirectory(_path[_index]), _path, _head, _index + 1);
-}
-
-DataContainer ZipReader::ReadAsset(const std::string& _assetName)
-{
-
-}
-
-std::vector<DataContainer> ZipReader::ReadAllAssetsInDir(const std::string& _directoryName)
-{
-
 }
