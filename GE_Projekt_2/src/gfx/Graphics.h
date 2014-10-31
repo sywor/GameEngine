@@ -37,7 +37,7 @@ public:
 	void createTextureView(char *_data, int _width, int _heightDXGI_FORMAT, int _bpp);
 	//----------------------------------
 
-private:
+public:
 
 	HRESULT InitDevice(HWND _hwnd);
 	void createBackBuffer();

@@ -3,7 +3,7 @@
 
 #include "RenderInterface.h"
 
-extern RenderInterface* renderInderface;
+extern RenderInterface* renderInterface;
 
 //register keyboard mouse as input devices!
 bool RegisterInputDevices( HWND &hWnd )
@@ -52,31 +52,31 @@ void inline HandleRawInput( HWND &hWnd, HRAWINPUT &lParam )
 			case WM_KEYUP : 
 				switch ( raw->data.keyboard.VKey )
 				{
-					case 'W' : renderInderface->getCamera()->setMovementToggle( 0, 0 );
+					case 'W' : renderInterface->getCamera()->setMovementToggle( 0, 0 );
 					break;
 
-					case 'S': renderInderface->getCamera()->setMovementToggle(1, 0);
+					case 'S': renderInterface->getCamera()->setMovementToggle(1, 0);
 					break;
 
-					case 'A': renderInderface->getCamera()->setMovementToggle(2, 0);
+					case 'A': renderInterface->getCamera()->setMovementToggle(2, 0);
 					break;
 
-					case 'D': renderInderface->getCamera()->setMovementToggle(3, 0);
+					case 'D': renderInterface->getCamera()->setMovementToggle(3, 0);
 					break;
 
-					case 'M': renderInderface->getButtonInput()->SetMPressed(false);
+					case 'M': renderInterface->getButtonInput()->SetMPressed(false);
 					break;
 					
-					case 'N': renderInderface->getButtonInput()->SetNPressed(false);
+					case 'N': renderInterface->getButtonInput()->SetNPressed(false);
 					break;
 					
-					case 'B': renderInderface->getButtonInput()->SetBPressed(false);
+					case 'B': renderInterface->getButtonInput()->SetBPressed(false);
 					break;
 
-					case 'V': renderInderface->getButtonInput()->SetVPressed(false);
+					case 'V': renderInterface->getButtonInput()->SetVPressed(false);
 					break;
 
-					case 'C': renderInderface->getButtonInput()->SetCPressed(false);
+					case 'C': renderInterface->getButtonInput()->SetCPressed(false);
 					break;
 				}
 			break;
@@ -88,31 +88,31 @@ void inline HandleRawInput( HWND &hWnd, HRAWINPUT &lParam )
 					case VK_ESCAPE : PostQuitMessage(0);
 					break;
 
-					case 'W': renderInderface->getCamera()->setMovementToggle(0, 1);
+					case 'W': renderInterface->getCamera()->setMovementToggle(0, 1);
 					break;
 
-					case 'S': renderInderface->getCamera()->setMovementToggle(1, -1);
+					case 'S': renderInterface->getCamera()->setMovementToggle(1, -1);
 					break;
 
-					case 'A': renderInderface->getCamera()->setMovementToggle(2, -1);
+					case 'A': renderInterface->getCamera()->setMovementToggle(2, -1);
 					break;
 
-					case 'D': renderInderface->getCamera()->setMovementToggle(3, 1);
+					case 'D': renderInterface->getCamera()->setMovementToggle(3, 1);
 					break;
 
-					case 'M': renderInderface->getButtonInput()->SetMPressed(true);
+					case 'M': renderInterface->getButtonInput()->SetMPressed(true);
 					break;
 
-					case 'N': renderInderface->getButtonInput()->SetNPressed(true);
+					case 'N': renderInterface->getButtonInput()->SetNPressed(true);
 					break;
 					
-					case 'B': renderInderface->getButtonInput()->SetBPressed(true);
+					case 'B': renderInterface->getButtonInput()->SetBPressed(true);
 					break;
 
-					case 'V': renderInderface->getButtonInput()->SetVPressed(true);
+					case 'V': renderInterface->getButtonInput()->SetVPressed(true);
 					break;
 
-					case 'C': renderInderface->getButtonInput()->SetCPressed(true);
+					case 'C': renderInterface->getButtonInput()->SetCPressed(true);
 					break;
 				}
 			break;
@@ -127,7 +127,7 @@ void inline HandleRawInput( HWND &hWnd, HRAWINPUT &lParam )
 		float y = raw->data.mouse.lLastY;
 		float mul = 0.0025f;
 		//mouse camera control
-		renderInderface->getCamera()->adjustHeadingPitch(mul * (float)raw->data.mouse.lLastX, mul * (float)raw->data.mouse.lLastY);
+		renderInterface->getCamera()->adjustHeadingPitch(mul * (float)raw->data.mouse.lLastX, mul * (float)raw->data.mouse.lLastY);
 		
 	}
 

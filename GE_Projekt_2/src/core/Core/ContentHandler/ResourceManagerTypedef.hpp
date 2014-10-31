@@ -15,14 +15,10 @@ namespace trr
 		8,
 
 		/* Size of the internal memory allocator */
-<<<<<<< HEAD
 		1024 * 1024 * 10,
-=======
-		524288,
 
-		/* Size of internal memory for metadata */
-		262144,
->>>>>>> be0efca40700414cca4e00c4ce6f17ba7a80739d
+		/* Internal memory limit */
+		1024 * 1024 * 10,
 
 		/* List loader classes here */
 

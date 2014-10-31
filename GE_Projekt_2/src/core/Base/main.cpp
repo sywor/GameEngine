@@ -1,14 +1,14 @@
 #pragma once
 
-//#include <utility/utilities.hpp>
-//#include <Instances/Instances.hpp>
-//#include <Base/Levels/Level1.hpp>
-//#include <utility/HighresTimer.hpp>
-//#include <logger/Logger.hpp>
-//#include <Systems/TestSystem.hpp>
-//#include <Core\ContentHandler\OssiansPlaygroud_DeleteUponRelese.hpp>
+#include <utility/utilities.hpp>
+#include <Instances/Instances.hpp>
+#include <Base/Levels/Level1.hpp>
+#include <utility/HighresTimer.hpp>
+#include <logger/Logger.hpp>
+#include <Systems/TestSystem.hpp>
+#include <Core\ContentHandler\OssiansPlaygroud_DeleteUponRelese.hpp>
 //
-//#include <Core\ContentHandler\ResourceManager.hpp>
+#include <Core\ContentHandler\ResourceManager.hpp>
 //
 //#include <crtdbg.h>
 //
@@ -219,6 +219,8 @@
 #include "..\gfx\Graphics.h"
 #include <tchar.h>
 
+RenderInterface* renderInterface;
+
 HRESULT             InitWindow(HINSTANCE hInstance, int nCmdShow);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
@@ -227,7 +229,7 @@ HRESULT				Update(float deltaTime);
 HINSTANCE				g_hInst = NULL;
 HWND					g_hWnd = NULL;
 
-RenderInterface* renderInderface;
+
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
@@ -236,7 +238,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	RegisterInputDevices(g_hWnd);
 
-	renderInderface =  Renderer::RenderAPI::createRenderer(g_hWnd);
+	renderInterface =  Renderer::RenderAPI::createRenderer(g_hWnd);
 
 	__int64 cntsPerSec = 0;
 	QueryPerformanceFrequency((LARGE_INTEGER*)&cntsPerSec);
@@ -245,6 +247,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
 
+	trr::contentManager.InitContentLib(L"tImage.zip");
+	trr::contentManager.GetResource("smiley.bmp.image");
 	// Main message loop
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -261,10 +265,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			float dt = (currTimeStamp - prevTimeStamp) * secsPerCnt;
 
 			//render
-			renderInderface->update(dt);
-			renderInderface->render(dt);
+			renderInterface->update(dt);
+			renderInterface->render(dt);
 
-			renderInderface->getCamera()->update();
+			renderInterface->getCamera()->update();
 
 			prevTimeStamp = currTimeStamp;
 		}

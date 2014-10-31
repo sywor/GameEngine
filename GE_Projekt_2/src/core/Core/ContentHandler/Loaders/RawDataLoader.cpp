@@ -1,6 +1,9 @@
 #include "RawDataLoader.hpp"
 #include <fstream>
 #include "../shared/gfx/GFXInterface.hpp"
+#include "../shared/RenderInterface.h"
+
+extern RenderInterface* renderInterface;
 namespace trr
 {
 
@@ -18,6 +21,8 @@ namespace trr
 		fwrite(in.data, 1, in.size, f);
 		fclose(f);
 
+		renderInterface->addTexture(in.data, bmih->biWidth, bmih->biHeight, bmih->biBitCount);
+		
 		return nullptr;
 	}
 
