@@ -5,16 +5,24 @@
 
 /* Include headers for loaders here */
 #include <Core/ContentHandler/Loaders/TestLoader.hpp>
-#include <Core\ContentHandler\Loaders\RawDataLoader.hpp>
+#include <Core/ContentHandler/Loaders/RawDataLoader.hpp>
+
 namespace trr
 {
-	typedef ResourceManager<
+	typedef ResourceManager< 
 
-		/* block size of the internal memory allocator */
+		/* Block size of the internal memory allocator */
 		8,
 
 		/* Size of the internal memory allocator */
+<<<<<<< HEAD
 		1024 * 1024 * 10,
+=======
+		524288,
+
+		/* Size of internal memory for metadata */
+		262144,
+>>>>>>> be0efca40700414cca4e00c4ce6f17ba7a80739d
 
 		/* List loader classes here */
 
