@@ -18,7 +18,7 @@ namespace trr
 		TestLoader();
 		virtual ~TestLoader() override;
 
-		const std::string GetExtension() final { return "test"; }
+		const std::string GetExtension() final { return "txt"; }
 
 	private:
 

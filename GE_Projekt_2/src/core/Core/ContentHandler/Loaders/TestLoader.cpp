@@ -21,6 +21,7 @@ namespace trr
 
 		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 
+		printf("%s\n", out);
 		LOG_DEBUG << "loaded test file" << std::endl;
 
 		return out;

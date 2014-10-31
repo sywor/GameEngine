@@ -1,20 +1,15 @@
 #include "Core\ContentHandler\Loaders\RawImageLoader.h"
 
 #include <../include/FreeImage/Dist/FreeImage.h>
-
+#include <fstream>
 void* RawImageLoader::internal_Load(DataContainer in)
 {
 	if (in.data == nullptr)
 		return nullptr;
 
-	// out = alloc(sizeof(srvPtr)
-	// out = DXfromMemory
-	void* out = m_pAllocator->allocate<char>(in.size);
+	// because fuck you that's why!
 
-	if (out == nullptr)
-		return nullptr;
-
-	return out;
+	return nullptr;
 }
 
 void RawImageLoader::internal_unload(void* data)

@@ -6,11 +6,22 @@
 
 void* FreeImageLoader::internal_Load(DataContainer in)
 {
-	int w = 100;
-	int h = 100;
-	int bpp = 4;
+	int w = 675;
+	int h = 647;
+	int bpp = 24;
 	FIBITMAP* bitmap = FreeImage_Allocate(w, h, bpp,0, 0, 0);
-	memcpy(FreeImage_GetBits(bitmap), in.data, w * h * (bpp / 8));
+	if (!bitmap)
+		return nullptr;
+
+	BYTE* px = FreeImage_GetBits(bitmap);
+	px[0] = 255;
+	FreeImage_Save(FreeImage_GetFIFFromFilename("testImage.jpg"), bitmap, "testImage.jpg", 0);
+	FreeImage_Unload(bitmap);
+
+	FIBITMAP* fbm = FreeImage_ConvertFromRawBits((BYTE*)in.data, w, h, 12, bpp, 0, 0, 0, 0);
+	FreeImage_Save(FreeImage_GetFIFFromFilename("testImageA.jpg"), bitmap, "testImageA.jpg", 0);
+	FreeImage_Unload(fbm);
+
 	return bitmap;
 }
 

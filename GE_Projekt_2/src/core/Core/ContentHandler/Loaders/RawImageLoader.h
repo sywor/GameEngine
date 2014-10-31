@@ -29,5 +29,5 @@ public:
 	resource loader. Used for matching a type of resource
 	with a loader.
 	*/
-	const std::string GetExtension() final { return "dx"; }
+	const std::string GetExtension() final { return "image"; }
 };
