@@ -25,7 +25,7 @@ public:
 
 	Vertex wall[6];
 
-	ID3D11ShaderResourceView *texture;
+	ID3D11ShaderResourceView *texture = nullptr;
 
 	ID3D11Device* g_Device;
 	ID3D11DeviceContext* g_DeviceContext;

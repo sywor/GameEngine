@@ -285,6 +285,10 @@ HRESULT Graphics::Update(float _deltaTime)
 
 HRESULT Graphics::Render(float _deltaTime)
 {
+	if (texture != nullptr)
+		g_DeviceContext->PSSetShaderResources(0, 1, &texture);
+
+
 	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
 	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
 	g_DeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH, 1, 0);

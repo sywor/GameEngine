@@ -7,11 +7,16 @@ struct PS_INPUT
 	float2 tex		: TEXCOORD0;
 };
 
-//Texture2D tex		: register(t0);
+Texture2D tex		: register(t0);
 
 float4 main(PS_INPUT _input) : SV_TARGET
 {
-	//return tex.Sample(samLinear, _input.tex);
-	//return float4(_input.normal.xyz, 1.0f);
-	return float4(1,1,1,1.0f);
+
+	float4 color = tex.Sample(samLinear, _input.tex);
+
+	if (color.x == 0 && color.y == 0 && color.z == 0 && color.w == 0)
+		return  float4(1, 1, 1, 1.0f);
+	else
+		return color;
+
 }
