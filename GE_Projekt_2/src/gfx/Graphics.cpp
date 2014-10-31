@@ -663,6 +663,43 @@ void Graphics::createBlendState()
 
 }
 
+void Graphics::createTextureView(char *_data, int _width, int _height, int _bpp)
+{
+
+	ID3D11Texture2D *temptexture = NULL;
+
+	D3D11_TEXTURE2D_DESC tdesc;
+	tdesc.ArraySize = 1;
+	tdesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	tdesc.CPUAccessFlags = 0;
+	tdesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+	tdesc.Height = _height;
+	tdesc.Width = _width;
+	tdesc.MipLevels = 1;
+	tdesc.MiscFlags = 0;
+	tdesc.Usage = D3D11_USAGE_DEFAULT;
+
+
+
+
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = _data;
+	initData.SysMemPitch = static_cast<UINT>(((_width * _bpp + 7)/8));
+	initData.SysMemSlicePitch = initData.SysMemPitch * _height;
+
+	g_Device->CreateTexture2D(&tdesc, &initData, &temptexture);
+
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
+	desc.Texture2D.MipLevels = 1;
+	desc.Texture2D.MostDetailedMip = 0;
+	desc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+	desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+	g_Device->CreateShaderResourceView(temptexture, &desc, &texture);
+}
+
 
 HRESULT Graphics::InitDevice(HWND _hwnd)
 {
