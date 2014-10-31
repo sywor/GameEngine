@@ -113,7 +113,7 @@ namespace trr
 			if (loaders.find(ext) != loaders.end())
 			{
 				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
+				int zipId = contentZipFile.Find(path);	// notice search of full path!
 				bool zipReadResult = false;
 				DataContainer rawData;
 

@@ -14,7 +14,7 @@ namespace trr
 		8,
 
 		/* Size of the internal memory allocator */
-		1024,
+		1024 * 1024 * 10,
 
 		/* List loader classes here */
 
