@@ -1,16 +1,10 @@
 #pragma once
 #include "stdafx.h"
-#include "Camera.h"
 
-//--------------------------------- temp includes for testing
-
-//#include "Object.h"
-//#include "Loader.h"
 #include "ICamera.h"
 #include "XMCamera.h"
-//---------------------------------
 
-
+#define SafeRelease(x) if(x) x->Release() ; x = NULL;
 
 
 
@@ -31,6 +25,8 @@ public:
 
 	Vertex wall[6];
 
+	ID3D11ShaderResourceView *texture = nullptr;
+
 	ID3D11Device* g_Device;
 	ID3D11DeviceContext* g_DeviceContext;
 	IDXGISwapChain* g_SwapChain;
@@ -38,20 +34,26 @@ public:
 
 	ICamera* Cam;
 
-
+	void createTextureView(char *_data, int _width, int _heightDXGI_FORMAT, int _bpp);
 	//----------------------------------
 
-private:
+public:
 
 	HRESULT InitDevice(HWND _hwnd);
 	void createBackBuffer();
+
+	void createShader();
 	void createShader(std::string _shader, std::string _shaderModel);
+
+
 	void createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layout);
 	void createSampler();
 	void createBuffers();
 	void createRasterState();
 	void createViewport();
 	void createBlendState();
+
+	
 
 	cbWorld cbWorld;
 	ID3D11Buffer* g_cbWorld = NULL;
@@ -60,10 +62,7 @@ private:
 	ID3D11RenderTargetView*  g_backBuffer = NULL;
 	ID3D11VertexShader* g_vertexShader = NULL;
 	ID3D11InputLayout* g_vertexLayout = NULL;
-	ID3D11GeometryShader* g_geometryShader = NULL;
-	ID3D11InputLayout* g_geometryLayout = NULL;
 	ID3D11PixelShader* g_pixelShader = NULL;
-	ID3D11InputLayout* g_pixelLayout = NULL;
 	ID3D11SamplerState *samLinear = NULL;
 	D3D11_VIEWPORT viewport;
 	ID3D11BlendState* g_blendState = NULL;
