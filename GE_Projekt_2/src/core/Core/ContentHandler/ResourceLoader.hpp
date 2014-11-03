@@ -5,7 +5,7 @@
 
 #include <string>
 #include <cstdint>
-#include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ContentHandler/ContainerLoaders/DataContainer.hpp>
 #include <Core/Memory/Allocation.h>
 #include <Core/Memory/PoolAllocator.h>
 
