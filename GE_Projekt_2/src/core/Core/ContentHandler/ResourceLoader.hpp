@@ -5,7 +5,7 @@
 
 #include <string>
 #include <cstdint>
-#include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ContentHandler/ContainerLoaders/DataContainer.hpp>
 #include <Core/Memory/Allocation.h>
 #include <Core/Memory/PoolAllocator.h>
 
@@ -16,6 +16,14 @@ namespace trr
 	{
 	private:
 
+		/*
+			Specific function for loading implementation.
+			Note: Should the memory allocator run out of memory
+				CONTENT_CALLBACK_OUT_OF_MEMORY should be returned 
+				in order to propagate the correct error. 
+				If ignored and nullptr is used when an error occurrs,
+				CONTENT_CALLBACK_LOADING_FAILED will be propagated insted.
+		*/
 		virtual void* internal_Load( DataContainer in ) = 0;
 		virtual void internal_unload( void* data) = 0;
 

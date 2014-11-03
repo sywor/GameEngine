@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <D3D11.h>
 #include <D3DX11.h>
-#include <D3DX10math.h>
+
 #include <d3dCompiler.h>
 //#include <DirectXMath.h>
 #include <string>
@@ -21,7 +21,7 @@
 #define PI (3.14159265358979323846f)
 
 static const int WIDTH = 800;
-static const int HEIGHT = 800;
+static const int HEIGHT = 600;
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -35,37 +35,175 @@ static const int HEIGHT = 800;
 #pragma comment(lib, "d3dx10.lib")
 #endif
 
+struct MATRIX4X4;
+struct VECTOR4;
+struct VECTOR3;
+struct VECTOR2;
 
-
-struct cbWorld
+struct COLOR
 {
+	FLOAT d[4];
+	COLOR(float r, float g, float b, float a)
+	{
+		d[0] = r;
+		d[1] = g;
+		d[2] = b;
+		d[3] = a;
+	}
+
+	operator const FLOAT* () { return (FLOAT*)this; }
+};
+
+#ifdef OLD_XLIB
+	#include <D3DX10math.h>
+	struct VECTOR2
+	{
+		D3DXVECTOR2 d;
+		VECTOR2() : d(D3DXVECTOR2(0, 0))
+		{}
+
+		VECTOR2 operator=(const VECTOR2& v2) { this->d = v2.d; }
+	};
+
+	struct VECTOR3
+	{
+		D3DXVECTOR3 d;
+
+		VECTOR3() : d(D3DXVECTOR3(0, 0, 0))
+		{}
+
+		VECTOR2 operator=(const VECTOR3& v2) { this->d = v2.d; }
+	};
+
+	struct VECTOR4
+	{
+		D3DXVECTOR4 d;
+
+		VECTOR4() : d(D3DXVECTOR4(0, 0, 0, 0))
+		{}
+
+		VECTOR2 operator=(const VECTOR4& v2) { this->d = v2.d; }
+	};
+
+	struct cbWorld
+	{
 	
-	D3DXMATRIX world;
-	D3DXMATRIX view;
-	D3DXMATRIX projection;
-	D3DXMATRIX worldInv;
-};
+		D3DXMATRIX world;
+		D3DXMATRIX view;
+		D3DXMATRIX projection;
+		D3DXMATRIX worldInv;
+	};
 
-
-struct Vertex
-{
-	D3DXVECTOR4 pos;
-	D3DXVECTOR4 normal;
-	D3DXVECTOR2 texC;
-
-	Vertex() : normal(D3DXVECTOR3(0, 0, 0))
+	struct Vertex
 	{
-	}
+		D3DXVECTOR4 pos;
+		D3DXVECTOR4 normal;
+		D3DXVECTOR2 texC;
+	};
 
-	Vertex(D3DXVECTOR3 p, D3DXVECTOR3 n) : pos(p), normal(n)
+
+#else
+	#include <DirectXMath.h>
+	using namespace DirectX;
+
+	//struct VECTOR
+	//{
+	//	XMVECTOR xmv;
+	//	VECTOR() {}
+	//	VECTOR(const XMVECTOR& _xmv) { xmv = _xmv; }
+	//	VECTOR(XMFLOAT4 _xmf4) { xmv = XMLoadFloat4(&_xmf4); }
+	//	VECTOR(XMFLOAT3 _xmf3) { xmv = XMLoadFloat3(&_xmf3); }
+	//	VECTOR(XMFLOAT2 _xmf2) { xmv = XMLoadFloat2(&_xmf2); }
+	//	VECTOR(float x, float y, float z, float w) { xmv = XMVectorSet(x, y, z, w); }
+	//	VECTOR(float x, float y, float z) { xmv = XMLoadFloat3(&XMFLOAT3(x, y, z)); }
+	//	VECTOR(float x, float y) { xmv = XMLoadFloat2(&XMFLOAT2(x, y)); }
+	//};
+
+	struct VECTOR2
 	{
-	}
+		XMFLOAT2 d;
+		VECTOR2() : d(XMFLOAT2(0, 0))
+		{}
+		VECTOR2(float x, float y) : d(XMFLOAT2(x, y))
+		{}
+		XMFLOAT2 operator=(const XMFLOAT2& d2) { this->d = d2; }
 
-	Vertex(D3DXVECTOR3 p, D3DXVECTOR2 t, D3DXVECTOR3 n) : pos(p), normal(n), texC(t)
+		operator const XMFLOAT2(){ return this->d; }
+	};
+
+	struct VECTOR3
 	{
-	}
-};
+		XMFLOAT3 d;
 
+		VECTOR3() : d(XMFLOAT3(0, 0, 0))
+		{}
+		VECTOR3(float x, float y, float z) : d(XMFLOAT3(x, y, z))
+		{}
+		XMFLOAT3 operator=(const XMFLOAT3& d2) { this->d = d2; }
+
+		operator const XMFLOAT3(){ return this->d; }
+	};
+
+	struct VECTOR4
+	{
+		XMFLOAT4 d;
+
+		VECTOR4() : d(XMFLOAT4(0, 0, 0, 0))
+		{}
+
+		VECTOR4(float x, float y, float z, float w) : d(XMFLOAT4(x, y, z, w))
+		{}
+
+		XMFLOAT4 operator=(const XMFLOAT4& d2) { this->d = d2; }
+
+		operator const XMFLOAT4(){ return this->d; }
+	};
+
+	struct MATRIX4X4
+	{
+		XMFLOAT4X4 d;
+
+		MATRIX4X4()
+		{
+			XMStoreFloat4x4(&d, XMMatrixIdentity());
+		}
+
+		MATRIX4X4(const MATRIX4X4& m4x4)
+			: d(m4x4.d)
+		{}
+
+		MATRIX4X4(const XMFLOAT4X4& m4x4)
+			: d(m4x4)
+		{}
+
+		//XMFLOAT4X4 operator=(const XMFLOAT4X4& d2)	{ XMStoreFloat4x4(&this->d, XMLoadFloat4x4(&d2)); }
+		operator const XMFLOAT4*()					{ return (XMFLOAT4*)this; }
+		operator XMMATRIX()							{ return XMLoadFloat4x4(&d); }
+	};
+
+	struct cbWorld
+	{
+		MATRIX4X4 world;
+		MATRIX4X4 view;
+		MATRIX4X4 projection;
+		MATRIX4X4 worldInv;
+	};
+
+	struct Vertex
+	{
+		XMFLOAT4 pos;
+		XMFLOAT4 normal;
+		XMFLOAT2 texC;
+	};
+
+	//struct Vertex
+	//{
+	//	VECTOR4 pos;
+	//	VECTOR4 normal;
+	//	VECTOR2 texC;
+	//};
+
+#endif
 
 
 

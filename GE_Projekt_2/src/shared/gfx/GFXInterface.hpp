@@ -21,6 +21,9 @@
 //#include <gfx/GFXMaterial.hpp>
 //#include <gfx/GFXFont.hpp>
 //#include <bitmask/bitmask_types.hpp>
+#include "../shared/RenderInterface.h"
+
+extern RenderInterface* renderInterface;
 
 namespace gfx
 {
@@ -35,6 +38,14 @@ namespace gfx
 	DLL_API int SwapRenderJobBuffer();
 
 	DLL_API int Render( float dt );
+
+	int AddTexture(char* _data, int w, int h, int bpp)
+	{
+
+		//renderInterface->graphics->createTextureView(_data, w, h, bpp);
+
+		return 0;
+	}
 }
 
 namespace gfx

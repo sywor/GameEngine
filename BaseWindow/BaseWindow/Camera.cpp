@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 
+#ifdef OLD_XLIB
 /*******************************************************************
 * constructor and destructor
 ********************************************************************/
@@ -143,3 +144,4 @@ void Camera::update()
 	camTimer.reset();
 }
 
+#endif

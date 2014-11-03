@@ -9,8 +9,9 @@
 
 #include "../Memory/DefaultAllocator.h"
 #include <Core/ContentHandler/MurrMurr64.hpp>
-#include <Core/ContentHandler/ZipHandler.hpp>
-#include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ContentHandler/ContainerLoaders/ZipReader.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PotatoGun.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PackageHandler.hpp>
 #include <Core/ContentHandler/CallbackContainer.hpp>
 #include <Core/ThreadPool/Threadpool.hpp>
 #include <logger/Logger.hpp>
@@ -20,8 +21,15 @@
 #include <string>
 #include <functional>
 
-
-
+#define CONTENT_CALLBACK_CAN_NOT_FIND_FILE			(void*)1
+#define CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE		(void*)2
+#define CONTENT_CALLBACK_LOADING_FAILED				(void*)3
+#define CONTENT_CALLBACK_OUT_OF_MEMORY				(void*)4
+#define CONTENT_CHECK_VALID_DATA( dataPointer )		( dataPointer != nullptr \
+													&& dataPointer != CONTENT_CALLBACK_CAN_NOT_FIND_FILE \
+													&& dataPointer != CONTENT_CALLBACK_LOADING_FAILED \
+													&& dataPointer != CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE \
+													&& dataPointer != CONTENT_CALLBACK_OUT_OF_MEMORY )
 
 #ifdef USE_ASYNC_LOCKING
 #ifdef USE_CRITICAL_SECTION_LOCK
@@ -38,16 +46,16 @@
 #define EXIT_CRITICAL_SECTION_ASSETLIST		mutex_assetList.unlock()
 #define ENTER_CRITICAL_SECTION_GENERAL		mutex_general.lock()
 #define EXIT_CRITICAL_SECTION_GENERAL		mutex_general.unlock()
-#define ENTER_CRITICAL_SECTION_ZLIB			mutex_zLib.lock()
-#define EXIT_CRITICAL_SECTION_ZLIB			mutex_zLib.unlock()
+#define ENTER_CRITICAL_SECTION_PACKAGES		mutex_packages.lock()
+#define EXIT_CRITICAL_SECTION_PACKAGES		mutex_packages.unlock()
 #endif
 #else
 #define ENTER_CRITICAL_SECTION_ASSETLIST
 #define EXIT_CRITICAL_SECTION_ASSETLIST
 #define ENTER_CRITICAL_SECTION_GENERAL
 #define EXIT_CRITICAL_SECTION_GENERAL
-#define ENTER_CRITICAL_SECTION_ZLIB
-#define EXIT_CRITICAL_SECTION_ZLIB
+#define ENTER_CRITICAL_SECTION_PACKAGES
+#define EXIT_CRITICAL_SECTION_PACKAGES
 #endif
 
 
@@ -84,7 +92,7 @@ static bool MatchExtension(const char* fExt, const char *lExt)
 namespace trr
 {
 
-	template< int MemoryBlockSize, int sizeOfMemory, typename... LoadersDef >
+	template< int memoryBlockSize, int sizeOfMemory, int internalMetaMemoryLimit, typename... LoadersDef >
 	class ResourceManager
 	{
 	private:
@@ -102,49 +110,100 @@ namespace trr
 			std::string fileName = path.substr(0, sep);
 			const std::string ext = path.substr(sep + 1);
 
+			void* data = nullptr;
 			if (loaders.find(ext) != loaders.end())
 			{
-				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
-				bool zipReadResult = false;
-				DataContainer rawData;
+				ENTER_CRITICAL_SECTION_PACKAGES;
+				DataContainer rawData = packagehandler->ReadAsset(fileName);
+				EXIT_CRITICAL_SECTION_PACKAGES;
 
-				if (zipId != -1)
+				if (rawData.err == PackageResult::PACKAGE_OK)
 				{
-					int fileLength = contentZipFile.GetFileLen(zipId);
-					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-					zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
-				}
-				EXIT_CRITICAL_SECTION_ZLIB;
-
-				void* data = nullptr;
-				if (zipReadResult && (data = loaders[ext]->Load( rawData )) != nullptr )
-				{
-					// resource existance is guaranteed by caller
-					ENTER_CRITICAL_SECTION_ASSETLIST;
-					Resource assetRef = assetList[hash];
-					assetRef.path	= path;
-					assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
-					assetRef.data	= data;
-					assetRef.loaderExtension = ext;
-					assetList[hash]	= assetRef;
-
-					// always run callbacks
-					RunCallbacks( hash, data );
-
-					// check if unloaded while loading
-					if( assetRef.nrReferences == 0 )
+					if( (data = loaders[ext]->Load( rawData )) == nullptr )
 					{
-						std::string extension = assetList[ hash ].getExtension();
-						workPool.Enqueue( [ this, hash, extension ]()
-						{
-							UnloadResource( hash, extension );
-						});
+						data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 					}
-					EXIT_CRITICAL_SECTION_ASSETLIST;
+				}
+				else if( data != CONTENT_CALLBACK_OUT_OF_MEMORY )
+				{
+					data = CONTENT_CALLBACK_CAN_NOT_FIND_FILE;
 				}
 				contentAllocator.deallocate(rawData.data);
 			}
+			else
+			{
+				data = CONTENT_CALLBACK_NO_LOADER_ACCEPTS_FILE;
+			}
+
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			Resource assetRef = assetList[hash];
+			if( assetRef.path == nullptr && CONTENT_CHECK_VALID_DATA( data ) )
+			{
+				char* pathMemory = (char*)contentAllocator.FlatAllocate( path.size() + 1 );
+				if( pathMemory != nullptr )
+				{
+					std::memcpy( pathMemory, path.c_str(), path.length() );
+					char tempChar = '\0';
+					std::memcpy( pathMemory + path.size(), &tempChar, 1 );
+					assetList[ hash ].path = pathMemory;
+					assetRef.path = pathMemory;
+				}
+				else
+				{
+					// handle error
+					contentAllocator.deallocate( data );
+					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+				}
+			}
+
+			if( assetRef.loaderExtension == nullptr && assetRef.path != nullptr && CONTENT_CHECK_VALID_DATA( data ) )
+			{
+				char* extMemory = (char*)contentAllocator.FlatAllocate( ext.size() + 1 );
+				if( extMemory != nullptr )
+				{
+					std::memcpy( extMemory, ext.data(), ext.size() );
+					char tempChar = '\0';
+					std::memcpy( extMemory + ext.size(), &tempChar, 1 );
+					assetList[ hash ].loaderExtension = extMemory;
+				}
+				else
+				{
+					// handle error
+					contentAllocator.deallocate( data );
+					data = CONTENT_CALLBACK_OUT_OF_MEMORY;
+				}
+			}
+
+			if( CONTENT_CHECK_VALID_DATA( data ) )
+			{
+				// resource existance is guaranteed by caller
+				Resource assetRef = assetList[hash];
+				assetRef.state	= (assetRef.nrReferences == 0) ? assetRef.state : RState::READY;
+				assetRef.data	= data;
+				assetList[hash]	= assetRef;
+
+				// always run callbacks
+				RunCallbacks( hash, data );
+
+				// check if unloaded while loading
+				if( assetRef.nrReferences == 0 )
+				{					
+					std::string extension = assetList[ hash ].getExtension();
+					workPool.Enqueue( [ this, hash, extension ]()
+					{
+						UnloadResource( hash, extension );
+					});
+				}
+			}
+			else
+			{
+				// error occurred
+				// remove asset instance
+				// run callbacks with tagged parameters
+				assetList.erase( hash );
+				RunCallbacks( hash, data );
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
 		}
 
 		void RunCallbacks( std::uint64_t hash, void* data )
@@ -164,15 +223,23 @@ namespace trr
 			}
 		}
 
-		void VolotileSetAssetState( std::uint64_t hash, RState state )
+		void VolatileSetAssetState( std::uint64_t hash, RState state )
 		{
 			assetList[ hash ].state = state;
+		}
+
+		void VolatileDeallocatePathAndExtension( std::uint64_t hash )
+		{
+			if( assetList[ hash ].loaderExtension )
+				contentAllocator.deallocate( assetList[ hash ].loaderExtension );
+			if( assetList[ hash ].path )
+				contentAllocator.deallocate( assetList[ hash ].path );
 		}
 
 		void UnloadResource( std::uint64_t hash, std::string extension )
 		{
 			if( loaders.find( extension ) != loaders.end() )
-			{						
+			{				
 				workPool.Enqueue( [ this, extension, hash ]()
 				{
 					loaders[ extension ]->Unload( (void*)assetList[ hash ].getData() );
@@ -182,7 +249,7 @@ namespace trr
 					unsigned int nrRefs = assetList[hash].getReferences();
 					if( nrRefs > 0 )
 					{
-						VolotileSetAssetState( hash, RState::LOADING );
+						VolatileSetAssetState( hash, RState::LOADING );
 						std::string path = assetList[ hash ].getPath();
 						workPool.Enqueue( [ this, hash, path ]()
 						{
@@ -191,6 +258,7 @@ namespace trr
 					}
 					else
 					{
+						VolatileDeallocatePathAndExtension( hash );
 						assetList.erase( hash );
 					}
 
@@ -199,12 +267,13 @@ namespace trr
 			}
 		}
 
+
 	public: 
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// class utility
 		ResourceManager()
-			: contentAllocator(MemoryBlockSize, sizeOfMemory )
+			: contentAllocator(memoryBlockSize, sizeOfMemory), packagehandler(contentAllocator.allocate<packageHandler>())
 		{
 
 			#ifdef USE_CRITICAL_SECTION_LOCK
@@ -216,6 +285,13 @@ namespace trr
 				return; // Should improve error handling / author
 			#endif
 
+			// calculate memory limits for metadata
+			// assume general purpose configuration: 50/50 split 
+			memoryLimit = internalMetaMemoryLimit;
+			int split = internalMetaMemoryLimit / 2;
+			callbackListSizeLimit	= split / sizeof( CallbackContainer );
+			assetListSizeLimit		= split / sizeof( std::pair< std::uint64_t, Resource > );
+
 			inOutStalled = false;
 			workPool.Initialize( 2 );
 			ResourceLoader::SetAllocator(&contentAllocator);
@@ -226,22 +302,55 @@ namespace trr
 		{
 			workPool.KillThreads();
 		}
-		
-		/*
-		*/
-		bool InitContentLib(const std::wstring contentLib)
+
+		void InitContentLibs(std::initializer_list<std::string> _packages)
 		{
-			ENTER_CRITICAL_SECTION_GENERAL;
-			bool result = contentZipFile.Init(contentLib);
-			EXIT_CRITICAL_SECTION_GENERAL;
-			return result;
+			for each (std::string str in _packages)
+			{
+				int dotIndex = str.find_last_of('.');
+				std::string extention = str.substr(dotIndex + 1);
+				PackageResult pr;
+				if (extention == "Spud")
+				{
+					PotatoGun* pg = contentAllocator.allocate<PotatoGun>(&contentAllocator);
+					pr = pg->LoadPackage(str);
+
+					if (pr != PackageResult::PACKAGE_OK)
+					{
+						LOG_ERROR << PackageResultToString(pr) << std::endl;
+						continue;
+					}
+
+					packagehandler->AddHandle(pg);
+				}
+				else if (extention == "zip")
+				{
+					ZipReader* zr = contentAllocator.allocate<ZipReader>(&contentAllocator);
+					pr = zr->LoadPackage(str);
+
+					if (pr != PackageResult::PACKAGE_OK)
+					{
+						LOG_ERROR << PackageResultToString(pr) << std::endl;
+						continue;
+					}
+
+					packagehandler->AddHandle(zr);
+				}
+			}
 		}
 
+		void DumpAssetList()
+		{
+			ENTER_CRITICAL_SECTION_ASSETLIST;
+			for( auto res = assetList.begin(); res != assetList.end(); res++ )
+			{
+				LOG_DEBUG <<  "asset dump - nrRefs: " << res->second.getReferences() << "  " << res->second.getPath() << std::endl;
+			}
+			EXIT_CRITICAL_SECTION_ASSETLIST;
+		}
 
 		// ///////////////////////////////////////////////////////////////////////////////// 
-		// content interface
-
-	
+		// content interface	
 
 		/*
 			Blocking function but still uses threading in the background.
@@ -251,11 +360,13 @@ namespace trr
 		const Resource GetResource( std::string path )
 		{
 			volatile int flag = 0;
+			void* errorMessage = nullptr;
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 			Resource res;
 			
-			GetResource( path, [ &flag ]( const void* data )
+			GetResource( path, [ &flag, &errorMessage ]( const void* data )
 			{
+				errorMessage = (void*)data;
 				flag = 1;
 			});
 
@@ -264,6 +375,10 @@ namespace trr
 			if( assetList.find( hash ) != assetList.end() )
 			{
 				res = assetList[ hash ];
+			}
+			else
+			{
+				res.data = errorMessage;
 			}
 			EXIT_CRITICAL_SECTION_ASSETLIST;
 			return res;
@@ -276,25 +391,55 @@ namespace trr
 		void GetResource(std::string path, std::function<void(const void* data)> callback)
 		{
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
-			
+
 			ENTER_CRITICAL_SECTION_ASSETLIST;
-			if( assetList.find( hash ) == assetList.end() )
+			if( callbackList.size() >= callbackListSizeLimit )
+			{
+				callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+				EXIT_CRITICAL_SECTION_ASSETLIST;
+				return;
+			}
+			else if( assetList.find( hash ) == assetList.end() )
 			{
 				// if asset is not existing, add it to the queue
-				Resource res( hash );
-				assetList[ hash ] = res;
-				callbackList.push_back( CallbackContainer( hash, callback ));
-				if( !inOutStalled )
+				if( assetList.size() < assetListSizeLimit )
 				{
-					workPool.Enqueue( [ this, path ]()
+					Resource res( hash );
+					assetList[ hash ] = res;
+					callbackList.push_back( CallbackContainer( hash, callback ));
+					if( !inOutStalled )
 					{
-						LoadResource( path );
-					});
+						workPool.Enqueue( [ this, path ]()
+						{
+							LoadResource( path );
+						});
+					}
+					else
+					{
+						assetList[ hash ].state = RState::WAITING_LOAD;
+						char* p = (char*)contentAllocator.FlatAllocate( path.size() + 1 );
+						if( p != nullptr )
+						{
+							std::memcpy( p, path.data(), path.size() );
+							char tempChar = '\0';
+							std::memcpy( p + path.size(), &tempChar, 1 );
+							assetList[ hash ].path	= p;
+						}
+						else
+						{
+							// handle error
+							RunCallbacks( hash, CONTENT_CALLBACK_OUT_OF_MEMORY );
+							assetList.erase( hash );
+							EXIT_CRITICAL_SECTION_ASSETLIST;
+							return;
+						}
+					}
 				}
 				else
 				{
-					assetList[ hash ].state = RState::WAITING_LOAD;
-					assetList[ hash ].path	= path;
+					callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+					EXIT_CRITICAL_SECTION_ASSETLIST;
+					return;
 				}
 			}
 			else if( assetList[ hash ].state != RState::READY )
@@ -341,7 +486,7 @@ namespace trr
 					if( !inOutStalled )
 					{
 						assetList[ hash ].state = RState::UNLOADING;
-						std::string extension = assetList[ hash ].loaderExtension;					
+						std::string extension = assetList[ hash ].getExtension();
 						workPool.Enqueue( [ this, hash, extension ]()
 						{
 							UnloadResource( hash, extension );
@@ -387,7 +532,7 @@ namespace trr
 					{
 						std::string path = res->second.getPath();
 						assetList[ res->second.hash ].state = RState::UNLOADING;
-						std::string extension = assetList[ res->second.hash ].loaderExtension;					
+						std::string extension = assetList[ res->second.hash ].getExtension();					
 						std::uint64_t hash = res->second.hash;
 						workPool.Enqueue( [ this, hash, extension, path ]()
 						{
@@ -411,15 +556,17 @@ namespace trr
 	private:
 		std::vector< CallbackContainer > callbackList;
 		std::map< std::uint64_t, Resource >	assetList;
-		std::map< const std::string, ResourceLoader* >	loaders;
-		
+		std::map< const std::string, ResourceLoader* >	loaders;	
 
 		PoolAllocator	contentAllocator;
-		ZipFile			contentZipFile;
+		packageHandler* packagehandler;
 		ThreadPool		workPool;
 
 		bool			inOutStalled;
 		
+		int				memoryLimit;
+		int				callbackListSizeLimit;
+		int				assetListSizeLimit;
 
 #ifdef USE_CRITICAL_SECTION_LOCK
 		CRITICAL_SECTION CriticalSection_AssetList;
@@ -428,10 +575,9 @@ namespace trr
 #else
 		std::mutex mutex_assetList;
 		std::mutex mutex_general;
-		std::mutex mutex_zLib;
+		std::mutex mutex_packages;
 #endif
 	};
-
 }
 
 #endif
@@ -440,3 +586,30 @@ namespace trr
 // TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
 //		  [ Under discussion and if time is available ]
 
+
+/* labb 2 requirements
+
+	v thread safe.
+	v hard limit memory usage.
+	- unload assets to free memory.
+	v dump list of currently loaded memory.
+	- test loaders
+	v guid
+	- stress scenario
+
+*/
+
+/* labb 3 
+	
+	e - graphical representation
+	e - use memory allocators
+	e - trivial report
+		d - 2 package formats, 2 asset formats
+			c - implement and explain 2 features not required by this or the 
+			    the previous assignemnts. may already be in use.
+					b - offline tool
+						a - formal report / stopid paper
+				
+
+
+*/
