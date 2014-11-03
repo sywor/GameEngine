@@ -26,7 +26,7 @@ PackageResult PotatoGun::LoadPackage(const std::string& _packageName)
 		uint fileEnd = fs.tellg();
 		uint headerSize = fileEnd - headerStart;
 		fs.seekg(headerStart);
-		char* buffer = allocator->allocate<char>(headerSize);
+		char* buffer = (char*)allocator->FlatAllocate(headerSize);
 
 		if (buffer == nullptr)
 			return PackageResult::OUT_OF_MEMORY;
@@ -34,6 +34,10 @@ PackageResult PotatoGun::LoadPackage(const std::string& _packageName)
 		fs.read(buffer, headerSize);
 
 		uint readPointer = 0;
+
+		char dbg[288];
+		memcpy(dbg, (char*)buffer, 288);
+
 		PackageResult err = ReadHeader(buffer, readPointer, root);
 
 		allocator->deallocate(buffer);
@@ -52,7 +56,7 @@ PackageResult PotatoGun::LoadPackage(const std::string& _packageName)
 	return PackageResult::FILE_NOT_FOUND;
 }
 
-PackageResult PotatoGun::ReadHeader(void* _data, uint& _readPointer, Directory* _root)
+PackageResult PotatoGun::ReadHeader(void* _data, uint& _readPointer, Directory*& _root)
 {
 	std::string directoryName = ReadString(_data, _readPointer);
 	uint directoryAssetCount = ReadUint(_data, _readPointer);

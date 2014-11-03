@@ -186,11 +186,11 @@ int main( int argc, char* argv[] )
 	//TestB();
 	//TestC();
 
-	PoolAllocator* allocator = new PoolAllocator(8, 1024);
+	PoolAllocator* allocator = new PoolAllocator(8, 2048);
 	PotatoGun* pg = allocator->allocate<PotatoGun>(allocator);
 	ZipReader* zr = allocator->allocate<ZipReader>(allocator);
-	pg->LoadPackage("zlib128-dll.Spud");
-	zr->LoadPackage("zlib128-dll.zip");
+	PackageResult pgpr = pg->LoadPackage("zlib128-dll.Spud");
+	PackageResult zrpr = zr->LoadPackage("zlib128-dll.zip");
 
 	packageHandler ph;
 	ph.AddHandle(pg);

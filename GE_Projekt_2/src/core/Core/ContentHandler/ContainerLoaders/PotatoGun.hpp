@@ -12,7 +12,7 @@ public:
 
 private:
 
-	PackageResult ReadHeader(void* _data, uint& _readPointer, Directory* _root);
+	PackageResult ReadHeader(void* _data, uint& _readPointer, Directory*& _root);
 	std::string ReadString(void* _data, uint& _readPointer);
 	uint ReadUint(void* _data, uint& _readPointer);
 };
