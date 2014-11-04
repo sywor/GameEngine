@@ -34,7 +34,7 @@ public:
 
 	ICamera* Cam;
 
-	void createTextureView(char *_data, int _width, int _heightDXGI_FORMAT, int _bpp);
+	void createTextureView(uint8_t *_data, int _sizeInBytes);
 	//----------------------------------
 
 public:

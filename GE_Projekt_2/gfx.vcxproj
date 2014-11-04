@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1BCA2D50-588D-D94F-A841-E0A24DFAD107}</ProjectGuid>
+    <ProjectGuid>{A8D75DC0-DD5A-7645-914F-EF32D324DBB8}</ProjectGuid>
     <RootNamespace>gfx</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -57,65 +57,69 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;$(ProjectDir)$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;GENERATE_LUA_API_FILE;DEBUG;GFX_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader></PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <ProgramDataBaseFileName>$(OutDir)gfx.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;GENERATE_LUA_API_FILE;DEBUG;GFX_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;$(ProjectDir)$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2test.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
-      <AdditionalLibraryDirectories>..\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\debug\gfx.lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;$(ProjectDir)$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;GENERATE_LUA_API_FILE;NDEBUG;RELEASE;GFX_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader></PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
+      <DebugInformationFormat></DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;GENERATE_LUA_API_FILE;NDEBUG;RELEASE;GFX_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\gfx;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\src\shared;$(ProjectDir)$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2test.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
-      <AdditionalLibraryDirectories>..\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\release\gfx.lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\gfx\GFXDefines.hpp" />
     <ClInclude Include="..\..\..\src\gfx\GFXInterface.hpp" />
+    <ClInclude Include="..\..\..\src\gfx\ButtonInput.h" />
+    <ClInclude Include="..\..\..\src\gfx\DLLFactory.h" />
+    <ClInclude Include="..\..\..\src\gfx\Graphics.h" />
+    <ClInclude Include="..\..\..\src\gfx\hrTimer.h" />
+    <ClInclude Include="..\..\..\src\gfx\ICamera.h" />
+    <ClInclude Include="..\..\..\src\gfx\stdafx.h" />
+    <ClInclude Include="..\..\..\src\gfx\XMCamera.h" />
     <ClInclude Include="..\..\..\src\shared\Notes.hpp" />
     <ClInclude Include="..\..\..\src\shared\gfx\GFXDefines.hpp" />
     <ClInclude Include="..\..\..\src\shared\gfx\GFXInterface.hpp" />
@@ -126,16 +130,32 @@
     <ClInclude Include="..\..\..\src\shared\utility\HighresTimer.hpp" />
     <ClInclude Include="..\..\..\src\shared\utility\StickyIndexVector.hpp" />
     <ClInclude Include="..\..\..\src\shared\utility\utilities.hpp" />
+    <ClInclude Include="..\..\..\src\shared\RenderInterface.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\gfx\ButtonInput.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\DLLFactory.cpp">
+    </ClCompile>
     <ClCompile Include="..\..\..\src\gfx\GFXInterface.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\Graphics.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\RenderInterface.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gfx\XMCamera.cpp">
     </ClCompile>
     <ClCompile Include="..\..\..\src\shared\utility\HighresTimer.cpp">
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\shaders\PixelShader.hlsl" />
+    <None Include="..\..\..\shaders\resources.hlsl" />
+    <None Include="..\..\..\shaders\VertexShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="logger.vcxproj">
-      <Project>{FBDBB3E9-7640-2D49-BBF0-C15FF7CFB5D8}</Project>
+      <Project>{525AE371-C53E-BF43-82CE-C8C9DF37902E}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

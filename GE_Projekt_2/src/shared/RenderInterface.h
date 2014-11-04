@@ -23,9 +23,9 @@ public:
 	virtual void update(float _deltaTime){ graphics->Update(_deltaTime); }
 	virtual void render(float _deltaTime){ graphics->Render(_deltaTime); }
 
-	virtual void addTexture(char *_data, int _width, int _height, int _bpp) 
+	virtual void addTexture(uint8_t *_data, int _sizeInBytes)
 	{ 
-		graphics->createTextureView(_data, _width, _height, _bpp); 
+		graphics->createTextureView(_data, _sizeInBytes);
 	}
 };
 

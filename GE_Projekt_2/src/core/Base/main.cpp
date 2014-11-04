@@ -46,8 +46,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
 
-	trr::contentManager.InitContentLibs({"zlib128-dll.Spud","zlib128-dll.zip"});
-	trr::contentManager.GetResource("test/minigzip_d.exe.image");
+	/*trr::contentManager.InitContentLibs({"zlib128-dll.Spud","zlib128-dll.zip"});
+	trr::contentManager.GetResource("test/minigzip_d.exe.image");*/
+	trr::contentManager.InitContentLibs({"tImage.zip" });
+	trr::contentManager.GetResource("smiley.bmp.image.image");
 	// Main message loop
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)

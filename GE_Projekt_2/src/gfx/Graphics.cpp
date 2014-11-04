@@ -1,5 +1,22 @@
 #include "Graphics.h"
 
+#include <comdef.h>
+#include <wincodec.h>
+
+#include "WICTextureLoader\WICTextureLoader.h"
+
+bool IsError(HRESULT _hr)
+{
+	if (FAILED(_hr))
+	{
+		_com_error err(_hr);
+		LPCTSTR errMsg = err.ErrorMessage();
+		MessageBox(NULL, errMsg, "SRV Error", MB_OK);
+		return true;
+	}
+	return false;
+}
+
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
 	if (featureLevel == D3D_FEATURE_LEVEL_11_0)
@@ -198,6 +215,7 @@ void Graphics::createShader()
 
 Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 {
+	
 	Cam = _cam;
 
 	if (FAILED(InitDevice(_hwnd)))
@@ -232,6 +250,13 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	wall[3].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
 	wall[4].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
 	wall[5].pos = VECTOR4(1.0 * -size,	1.0 * size,		depth, 1);
+
+	wall[0].texC = VECTOR2(1, 1);
+	wall[1].texC = VECTOR2(1, 0);
+	wall[2].texC = VECTOR2(0, 0);
+	wall[3].texC = VECTOR2(1, 1);
+	wall[4].texC = VECTOR2(0, 0);
+	wall[5].texC = VECTOR2(0, 1);
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
@@ -532,7 +557,6 @@ void Graphics::createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layo
 			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) elementDesc.Format = DXGI_FORMAT_R32G32B32A32_SINT;
 			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		}
-
 		inputLayoutDesc.push_back(elementDesc);
 	}
 
@@ -667,41 +691,21 @@ void Graphics::createBlendState()
 
 }
 
-void Graphics::createTextureView(char *_data, int _width, int _height, int _bpp)
+
+void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 {
-
-	ID3D11Texture2D *temptexture = NULL;
-
-	D3D11_TEXTURE2D_DESC tdesc;
-	tdesc.ArraySize = 1;
-	tdesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	tdesc.CPUAccessFlags = 0;
-	tdesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
-	tdesc.Height = _height;
-	tdesc.Width = _width;
-	tdesc.MipLevels = 1;
-	tdesc.MiscFlags = 0;
-	tdesc.Usage = D3D11_USAGE_DEFAULT;
+	HRESULT hr = CoInitialize(NULL);
+	
+	if (IsError(hr))
+	{
+	}
 
 
+	hr = CreateWICTextureFromMemory(g_Device, g_DeviceContext, (const uint8_t*)&_data[0], (size_t)_sizeInBytes, nullptr, &texture, NULL);
 
-
-
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = _data;
-	initData.SysMemPitch = static_cast<UINT>(((_width * _bpp + 7)/8));
-	initData.SysMemSlicePitch = initData.SysMemPitch * _height;
-
-	g_Device->CreateTexture2D(&tdesc, &initData, &temptexture);
-
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-	desc.Texture2D.MipLevels = 1;
-	desc.Texture2D.MostDetailedMip = 0;
-	desc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
-	desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-
-	g_Device->CreateShaderResourceView(temptexture, &desc, &texture);
+	if (IsError(hr))
+	{
+	}
 }
 
 
@@ -786,3 +790,4 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 	return S_OK;
 }
+
