@@ -75,7 +75,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		}
 	}
 
-
+	Renderer::RenderAPI::deleteRenderer(renderInterface);
 	return (int)msg.wParam;
 }
 

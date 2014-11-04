@@ -21,6 +21,7 @@ namespace trr
 	{
 		if (data)
 		{
+			//graphics unload
 			m_pAllocator->deallocate(data);
 			data = nullptr;
 		}

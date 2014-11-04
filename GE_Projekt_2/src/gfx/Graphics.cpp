@@ -286,8 +286,22 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 
 }
 
+template<typename IResource>
+void releaseMappedResources(std::map<uint64_t, IResource*> &_resourceMap)
+{
+	std::map<uint64_t, IResource*>::iterator itr = _resourceMap.begin();
+	while (itr != _resourceMap.end())
+	{
+		SAFE_RELEASE(itr->second);
+		SAFE_DELETE(itr->second);
+		itr++;
+	}
+	_resourceMap.clear();
+}
 Graphics::~Graphics()
 {
+	releaseMappedResources(srvs);
+	releaseMappedResources(buffers);
 }
 
 HRESULT Graphics::Update(float _deltaTime)
@@ -303,16 +317,12 @@ HRESULT Graphics::Update(float _deltaTime)
 	cbWorld.projection = Cam->getProjectionMatrix();
 	g_DeviceContext->UpdateSubresource(g_cbWorld,0,NULL,&cbWorld,0,0);
 
-
-
 	return S_OK;
 }
 
 HRESULT Graphics::Render(float _deltaTime)
 {
-	if (texture != nullptr)
-		g_DeviceContext->PSSetShaderResources(0, 1, &texture);
-
+	g_DeviceContext->PSSetShaderResources(0, 1, &srvs[42]);
 
 	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
 	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
@@ -695,17 +705,19 @@ void Graphics::createBlendState()
 void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 {
 	HRESULT hr = CoInitialize(NULL);
-	
+	ID3D11ShaderResourceView* srv = nullptr;
 	if (IsError(hr))
 	{
 	}
 
 
-	hr = CreateWICTextureFromMemory(g_Device, g_DeviceContext, (const uint8_t*)&_data[0], (size_t)_sizeInBytes, nullptr, &texture, NULL);
+	hr = CreateWICTextureFromMemory(g_Device, g_DeviceContext, (const uint8_t*)&_data[0], (size_t)_sizeInBytes, nullptr, &srv, NULL);
 
 	if (IsError(hr))
 	{
 	}
+
+	srvs[42] = srv;
 }
 
 

@@ -27,6 +27,9 @@ public:
 
 	ID3D11ShaderResourceView *texture = nullptr;
 
+	std::map<uint64_t, ID3D11ShaderResourceView*>	srvs;
+	std::map<uint64_t, ID3D11Buffer*>				buffers;
+
 	ID3D11Device* g_Device;
 	ID3D11DeviceContext* g_DeviceContext;
 	IDXGISwapChain* g_SwapChain;
@@ -53,7 +56,8 @@ public:
 	void createViewport();
 	void createBlendState();
 
-	
+	template<typename IResource>
+	void release(IResource* resource){SAFE_RELEASE(resource);}
 
 	cbWorld cbWorld;
 	ID3D11Buffer* g_cbWorld = NULL;
@@ -71,8 +75,5 @@ public:
 	ID3D11DepthStencilState*	g_depthStencilState = NULL;
 
 	ID3D11RasterizerState *rasterState = NULL;
-
-
-
 };
 

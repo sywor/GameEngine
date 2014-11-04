@@ -27,5 +27,7 @@ public:
 	{ 
 		graphics->createTextureView(_data, _sizeInBytes);
 	}
+
+	virtual void release(void* _iResource) {  }
 };
 
