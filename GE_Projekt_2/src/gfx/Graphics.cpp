@@ -281,7 +281,7 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 
 	g_DeviceContext->Unmap(g_vertexBuffer, 0);
 
-
+	nrOfTriangles = 6;
 	//------------------------------
 
 }
@@ -347,7 +347,7 @@ HRESULT Graphics::Render(float _deltaTime)
 
 
 	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
-	g_DeviceContext->Draw(6,0);
+	g_DeviceContext->Draw(nrOfTriangles,0);
 
 
 	// Presenting swapchain

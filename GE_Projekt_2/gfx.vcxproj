@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A8D75DC0-DD5A-7645-914F-EF32D324DBB8}</ProjectGuid>
+    <ProjectGuid>{816E65FE-B9F4-E54A-8264-68D39F79AAF0}</ProjectGuid>
     <RootNamespace>gfx</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -75,7 +75,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\debug\gfx.lib</ImportLibrary>
@@ -104,7 +104,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\release\gfx.lib</ImportLibrary>
@@ -155,7 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="logger.vcxproj">
-      <Project>{525AE371-C53E-BF43-82CE-C8C9DF37902E}</Project>
+      <Project>{2F43B976-A118-6D4D-9406-2A5BAED691C3}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
