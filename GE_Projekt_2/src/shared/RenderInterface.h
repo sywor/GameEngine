@@ -22,14 +22,14 @@ public:
 
 	virtual void update(float _deltaTime){ graphics->Update(_deltaTime); }
 	virtual void render(float _deltaTime){ graphics->Render(_deltaTime); }
-	virtual void setMesh(void* _data,int _nrOfTriangles)
+	virtual int setMesh(void* _data, int _nrOfTriangles)
 	{
-		graphics->setMesh(_data,_nrOfTriangles);
+		return graphics->setMesh(_data,_nrOfTriangles);
 	}
 
-	virtual void addTexture(uint8_t *_data, int _sizeInBytes)
+	virtual int addTexture(uint8_t *_data, int _sizeInBytes)
 	{ 
-		graphics->createTextureView(_data, _sizeInBytes);
+		return graphics->createTextureView(_data, _sizeInBytes);
 	}
 
 	virtual void release(void* _iResource) {  }

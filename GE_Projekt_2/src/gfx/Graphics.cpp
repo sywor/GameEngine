@@ -4,6 +4,7 @@
 #include <wincodec.h>
 
 #include "WICTextureLoader\WICTextureLoader.h"
+#include "gfx\GraphicsJobInformation.h"
 
 bool IsError(HRESULT _hr)
 {
@@ -234,75 +235,23 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	createRasterState();
 	createViewport();
 	createBlendState();
-
-	//------------------------------ temp variables for testing
-
-	for (int i = 0; i < 6; i++)
-	{
-		wall[i].normal	= VECTOR4(0, 0, 1, 1);
-		wall[i].texC	= VECTOR2(i, i);
-	}
-	const float size	= 5;
-	const float depth	= 10.0f;
-	wall[0].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
-	wall[1].pos = VECTOR4(1.0 * size,	1.0 * -size,	depth, 1);
-	wall[2].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
-	wall[3].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
-	wall[4].pos = VECTOR4(1.0 * -size,	1.0 * -size,	depth, 1);
-	wall[5].pos = VECTOR4(1.0 * -size,	1.0 * size,		depth, 1);
-
-	wall[0].texC = VECTOR2(1, 1);
-	wall[1].texC = VECTOR2(1, 0);
-	wall[2].texC = VECTOR2(0, 0);
-	wall[3].texC = VECTOR2(1, 1);
-	wall[4].texC = VECTOR2(0, 0);
-	wall[5].texC = VECTOR2(0, 1);
-
-
-	D3D11_BUFFER_DESC bufferDesc;
-	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth = sizeof(Vertex) * 6;
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	HRESULT result = S_OK;
-	result = g_Device->CreateBuffer(&bufferDesc, NULL, &g_vertexBuffer);
-	if (FAILED(result))
-	{
-		MessageBox(NULL, "Error creating dynamic vertex buffer", "RenderDX11 Error", S_OK);
-	}
-
-
-	D3D11_MAPPED_SUBRESOURCE updateData;
-	ZeroMemory(&updateData, sizeof(updateData));
-
-	if (!FAILED(g_DeviceContext->Map(g_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
-		memcpy(updateData.pData, &wall[0], sizeof(Vertex)* 6);
-
-	g_DeviceContext->Unmap(g_vertexBuffer, 0);
-
-	nrOfTriangles = 6;
-	//------------------------------
-
 }
 
-template<typename IResource>
-void releaseMappedResources(std::map<uint64_t, IResource*> &_resourceMap)
-{
-	std::map<uint64_t, IResource*>::iterator itr = _resourceMap.begin();
-	while (itr != _resourceMap.end())
-	{
-		SAFE_RELEASE(itr->second);
-		SAFE_DELETE(itr->second);
-		itr++;
-	}
-	_resourceMap.clear();
-}
+
 Graphics::~Graphics()
 {
-	releaseMappedResources(srvs);
-	releaseMappedResources(buffers);
+	for (int i = 0; i < textures.size(); i++)
+	{
+		SAFE_RELEASE(textures[i]);
+		SAFE_DELETE(textures[i]);
+	}
+	for (int i = 0; i < vertexBuffers.size(); i++)
+	{
+		SAFE_RELEASE(vertexBuffers[i].buffer);
+		SAFE_DELETE(vertexBuffers[i].buffer);
+	}
+	textures.clear();
+	vertexBuffers.clear();
 }
 
 HRESULT Graphics::Update(float _deltaTime)
@@ -323,7 +272,6 @@ HRESULT Graphics::Update(float _deltaTime)
 
 HRESULT Graphics::Render(float _deltaTime)
 {
-	g_DeviceContext->PSSetShaderResources(0, 1, &srvs[42]);
 
 	g_DeviceContext->VSSetShader(g_vertexShader,NULL,0);
 	g_DeviceContext->PSSetShader(g_pixelShader,NULL,0);
@@ -339,18 +287,22 @@ HRESULT Graphics::Render(float _deltaTime)
 	UINT strides = sizeof(Vertex);
 	UINT offset = 0;
 
-	g_DeviceContext->OMSetRenderTargets(1, &g_backBuffer,NULL);
+	g_DeviceContext->OMSetRenderTargets(1, &g_backBuffer, NULL);
 
 
 	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	g_DeviceContext->OMSetBlendState(g_blendState, blendFactor, 0xffffffff);
+	while (jobs.size() > 0)
+	{
+		g_DeviceContext->PSSetShaderResources(0, 1, &textures.at(jobs.at(jobs.size() - 1)->texture));
 
 
-	g_DeviceContext->IASetVertexBuffers(0, 1, &g_vertexBuffer, &strides, &offset);
-	g_DeviceContext->Draw(nrOfTriangles,0);
+		g_DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffers.at(jobs.at(jobs.size() - 1)->mesh).buffer, &strides, &offset);
+		g_DeviceContext->Draw(vertexBuffers.at(jobs.at(jobs.size() - 1)->mesh).nrOfTriangles, 0);
 
-
+		jobs.pop_back();
+	}
 	// Presenting swapchain
 	if (FAILED(g_SwapChain->Present(0, 0)))
 		return E_FAIL;
@@ -702,7 +654,7 @@ void Graphics::createBlendState()
 
 }
 
-void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
+int Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 {
 	HRESULT hr = CoInitialize(NULL);
 	ID3D11ShaderResourceView* srv = nullptr;
@@ -717,7 +669,17 @@ void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 	{
 	}
 
-	srvs[42] = srv;
+	for (int i = 0; i < textures.size(); i++)
+	{
+		if (textures[i] == nullptr)
+		{
+			textures[i] = srv;
+			return i;
+		}
+	}
+
+	textures.push_back( srv );
+	return textures.size() - 1;
 }
 
 HRESULT Graphics::InitDevice(HWND _hwnd)
@@ -802,8 +764,9 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 	return S_OK;
 }
 
-void Graphics::setMesh(void* _data, int _nrOfTriangles)
+int Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
+	ID3D11Buffer* tempBuffer;
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
@@ -813,7 +776,7 @@ void Graphics::setMesh(void* _data, int _nrOfTriangles)
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	HRESULT result = S_OK;
-	result = g_Device->CreateBuffer(&bufferDesc, NULL, &g_vertexBuffer);
+	result = g_Device->CreateBuffer(&bufferDesc, NULL, &tempBuffer);
 	if (FAILED(result))
 	{
 		MessageBox(NULL, "Error creating dynamic vertex buffer", "RenderDX11 Error", S_OK);
@@ -822,13 +785,28 @@ void Graphics::setMesh(void* _data, int _nrOfTriangles)
 	D3D11_MAPPED_SUBRESOURCE updateData;
 	ZeroMemory(&updateData, sizeof(updateData));
 
-	if (!FAILED(g_DeviceContext->Map(g_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
+	if (!FAILED(g_DeviceContext->Map(tempBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
 		memcpy(updateData.pData, _data, sizeof(Vertex)* 6);
 
-	g_DeviceContext->Unmap(g_vertexBuffer, 0);
+	g_DeviceContext->Unmap(tempBuffer, 0);
 
 	nrOfTriangles = _nrOfTriangles;
-	//---------------------
+
+	vertexBufferStruct bStruct;
+	bStruct.buffer = tempBuffer;
+	bStruct.nrOfTriangles = _nrOfTriangles;
+
+	for (int i = 0; i < vertexBuffers.size(); i++)
+	{
+		if (vertexBuffers[i].buffer == nullptr)
+		{
+			vertexBuffers[i] = bStruct;
+			return i;
+		}
+	}
+
+	vertexBuffers.push_back(bStruct);
+	return vertexBuffers.size() - 1;
 }
 
 void Graphics::AddRenderJob(GraphicsJobInfo* call)

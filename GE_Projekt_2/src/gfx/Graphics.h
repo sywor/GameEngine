@@ -6,6 +6,7 @@
 
 #include <vector>
 
+
 #define SafeRelease(x) if(x) x->Release() ; x = NULL;
 
 class GraphicsJobInfo;
@@ -27,9 +28,6 @@ public:
 
 	Vertex wall[6];
 
-	std::map<uint64_t, ID3D11ShaderResourceView*>	srvs;
-	std::map<uint64_t, ID3D11Buffer*>				buffers;
-
 	ID3D11Device* g_Device;
 	ID3D11DeviceContext* g_DeviceContext;
 	IDXGISwapChain* g_SwapChain;
@@ -37,8 +35,8 @@ public:
 
 	ICamera* Cam;
 
-	void createTextureView(uint8_t *_data, int _sizeInBytes);
-	void setMesh(void* _data, int _nrOfTriangles);
+	int createTextureView(uint8_t *_data, int _sizeInBytes);
+	int setMesh(void* _data, int _nrOfTriangles);
 
 	//----------------------------------
 
@@ -66,8 +64,17 @@ private:
 	ID3D11Buffer* g_cbWorld = NULL;
 	//ID3D11Buffer* g_vertexBuffer;
 	//ID3D11ShaderResourceView *texture = nullptr;
+	//std::map<uint64_t, ID3D11ShaderResourceView*>	srvs;
+	//std::map<uint64_t, ID3D11Buffer*>				buffers;
+
+	struct vertexBufferStruct
+	{
+		ID3D11Buffer* buffer;
+		int nrOfTriangles;
+	};
+
 	std::vector< GraphicsJobInfo* > jobs;
-	std::vector< ID3D11Buffer* > vertexBuffers;
+	std::vector< vertexBufferStruct > vertexBuffers;
 	std::vector< ID3D11ShaderResourceView* > textures;
 
 
