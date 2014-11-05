@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A8D75DC0-DD5A-7645-914F-EF32D324DBB8}</ProjectGuid>
+    <ProjectGuid>{2FAABEDC-FC9F-5E40-B7F2-8C2A64A5F74A}</ProjectGuid>
     <RootNamespace>gfx</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -75,7 +75,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\debug\gfx.lib</ImportLibrary>
@@ -104,7 +104,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\release\gfx.lib</ImportLibrary>
@@ -131,6 +131,7 @@
     <ClInclude Include="..\..\..\src\shared\utility\StickyIndexVector.hpp" />
     <ClInclude Include="..\..\..\src\shared\utility\utilities.hpp" />
     <ClInclude Include="..\..\..\src\shared\RenderInterface.h" />
+    <ClInclude Include="..\..\..\include\WICTextureLoader\WICTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\gfx\ButtonInput.cpp">
@@ -147,6 +148,8 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\shared\utility\HighresTimer.cpp">
     </ClCompile>
+    <ClCompile Include="..\..\..\include\WICTextureLoader\WICTextureLoader.cpp">
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\shaders\PixelShader.hlsl" />
@@ -155,7 +158,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="logger.vcxproj">
-      <Project>{525AE371-C53E-BF43-82CE-C8C9DF37902E}</Project>
+      <Project>{D7ED02C9-473F-4E43-A3B5-A0BF7EF16E88}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
