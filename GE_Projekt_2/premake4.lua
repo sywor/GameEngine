@@ -50,7 +50,7 @@ solution "q_ge_project_2"
 		language "C++"
 		kind "SharedLib"
 		files { "src/gfx/**.hpp", "src/gfx/**.h", "src/gfx/**.cpp", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h", "shaders/**.hlsl", "include/WICTextureLoader/WICTextureLoader.cpp", "include/WICTextureLoader/WICTextureLoader.h"  }
-		includedirs { "src/gfx", "include", "src/shared", "$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include"}
+		includedirs { "src/gfx", "include", "src/shared", "$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include", "include/WICTextureLoader/WICTextureLoader.*"}
 		defines { "GFX_DLL_EXPORT" }
 		links { "d3d11", "d3dcompiler", "dxguid", "winmm", "logger", "DirectXTex" }
 		

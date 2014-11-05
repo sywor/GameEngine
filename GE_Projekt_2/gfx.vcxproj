@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2E584FCD-B0C2-B142-97F2-55818B345EEC}</ProjectGuid>
+    <ProjectGuid>{A8D75DC0-DD5A-7645-914F-EF32D324DBB8}</ProjectGuid>
     <RootNamespace>gfx</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -76,7 +76,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\debug\gfx.lib</ImportLibrary>
@@ -107,13 +107,14 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxguid.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)gfx.dll</OutputFile>
       <AdditionalLibraryDirectories>..\..\..\lib;$(LibraryPath);$(DXSDK_DIR)Libx86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ImportLibrary>..\..\..\bin\release\gfx.lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\WICTextureLoader\WICTextureLoader.h" />
     <ClInclude Include="..\..\..\src\gfx\GFXDefines.hpp" />
     <ClInclude Include="..\..\..\src\gfx\GFXInterface.hpp" />
     <ClInclude Include="..\..\..\src\gfx\ButtonInput.h" />
@@ -136,6 +137,7 @@
     <ClInclude Include="..\..\..\src\shared\RenderInterface.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\include\WICTextureLoader\WICTextureLoader.cpp" />
     <ClCompile Include="..\..\..\src\gfx\ButtonInput.cpp">
     </ClCompile>
     <ClCompile Include="..\..\..\src\gfx\DLLFactory.cpp">
@@ -158,7 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="logger.vcxproj">
-      <Project>{2F43B976-A118-6D4D-9406-2A5BAED691C3}</Project>
+      <Project>{525AE371-C53E-BF43-82CE-C8C9DF37902E}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
