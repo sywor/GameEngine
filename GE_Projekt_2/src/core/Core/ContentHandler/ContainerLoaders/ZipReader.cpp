@@ -162,7 +162,7 @@ PackageResult ZipReader::LoadPackage(const std::string& _packageName)
 
 		if (central.fileNameLenght != 0)
 		{
-			char* buffer = allocator->allocate<char>(central.fileNameLenght);
+			char* buffer = (char*)allocator->FlatAllocate(central.fileNameLenght);
 
 			if (buffer == nullptr)
 				return PackageResult::OUT_OF_MEMORY;

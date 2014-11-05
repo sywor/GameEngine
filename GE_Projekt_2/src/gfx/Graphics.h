@@ -40,7 +40,7 @@ public:
 	void createTextureView(uint8_t *_data, int _sizeInBytes);
 	//----------------------------------
 
-public:
+private:
 
 	HRESULT InitDevice(HWND _hwnd);
 	void createBackBuffer();
@@ -75,5 +75,7 @@ public:
 	ID3D11DepthStencilState*	g_depthStencilState = NULL;
 
 	ID3D11RasterizerState *rasterState = NULL;
+
+	int nrOfTriangles;
 };
 
