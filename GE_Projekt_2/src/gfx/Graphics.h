@@ -38,9 +38,11 @@ public:
 	ICamera* Cam;
 
 	void createTextureView(uint8_t *_data, int _sizeInBytes);
+	void setMesh(void* _data, int _nrOfTriangles);
+
 	//----------------------------------
 
-public:
+private:
 
 	HRESULT InitDevice(HWND _hwnd);
 	void createBackBuffer();
@@ -75,5 +77,7 @@ public:
 	ID3D11DepthStencilState*	g_depthStencilState = NULL;
 
 	ID3D11RasterizerState *rasterState = NULL;
+
+	int nrOfTriangles;
 };
 
