@@ -22,6 +22,10 @@ public:
 
 	virtual void update(float _deltaTime){ graphics->Update(_deltaTime); }
 	virtual void render(float _deltaTime){ graphics->Render(_deltaTime); }
+	virtual void setMesh(void* _data,int _nrOfTriangles)
+	{
+		graphics->setMesh(_data,_nrOfTriangles);
+	}
 
 	virtual void addTexture(uint8_t *_data, int _sizeInBytes)
 	{ 

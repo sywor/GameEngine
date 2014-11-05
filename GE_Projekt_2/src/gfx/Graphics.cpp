@@ -258,6 +258,7 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	wall[4].texC = VECTOR2(0, 0);
 	wall[5].texC = VECTOR2(0, 1);
 
+
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -701,7 +702,6 @@ void Graphics::createBlendState()
 
 }
 
-
 void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 {
 	HRESULT hr = CoInitialize(NULL);
@@ -719,7 +719,6 @@ void Graphics::createTextureView(uint8_t *_data, int _sizeInBytes)
 
 	srvs[42] = srv;
 }
-
 
 HRESULT Graphics::InitDevice(HWND _hwnd)
 {
@@ -802,4 +801,36 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 	return S_OK;
 }
+
+void Graphics::setMesh(void* _data, int _nrOfTriangles)
+{
+	if (g_vertexBuffer == nullptr)
+		g_vertexBuffer->Release();
+
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.ByteWidth = sizeof(Vertex)* _nrOfTriangles;
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	HRESULT result = S_OK;
+	result = g_Device->CreateBuffer(&bufferDesc, NULL, &g_vertexBuffer);
+	if (FAILED(result))
+	{
+		MessageBox(NULL, "Error creating dynamic vertex buffer", "RenderDX11 Error", S_OK);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE updateData;
+	ZeroMemory(&updateData, sizeof(updateData));
+
+	if (!FAILED(g_DeviceContext->Map(g_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
+		memcpy(updateData.pData, _data, sizeof(Vertex)* 6);
+
+	g_DeviceContext->Unmap(g_vertexBuffer, 0);
+
+	nrOfTriangles = _nrOfTriangles;
+	//---------------------
+}
+
 
