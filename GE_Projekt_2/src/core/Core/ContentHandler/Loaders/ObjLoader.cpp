@@ -52,7 +52,7 @@ namespace trr
 			vertexOut.push_back(v);
 		}
 
-		renderInterface->setMesh((void*)&vertexOut, vertexOut.size());
+		renderInterface->setMesh((void*)&vertexOut[0], vertexOut.size());
 
 		return nullptr;
 	}

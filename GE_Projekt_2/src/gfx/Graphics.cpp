@@ -215,7 +215,7 @@ void Graphics::createShader()
 
 Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 {
-	
+	g_vertexBuffer = nullptr;
 	Cam = _cam;
 
 	if (FAILED(InitDevice(_hwnd)))
@@ -236,13 +236,13 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	createBlendState();
 
 	//------------------------------ temp variables for testing
-
+	return;
 	for (int i = 0; i < 6; i++)
 	{
 		wall[i].normal	= VECTOR4(0, 0, 1, 1);
 		wall[i].texC	= VECTOR2(i, i);
 	}
-	const float size	= 0;
+	const float size	= 50;
 	const float depth	= 10.0f;
 	wall[0].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
 	wall[1].pos = VECTOR4(1.0 * size,	1.0 * -size,	depth, 1);
@@ -804,8 +804,8 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 void Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
-	if (g_vertexBuffer == nullptr)
-		g_vertexBuffer->Release();
+	//if (g_vertexBuffer != nullptr)
+	//	SAFE_RELEASE(g_vertexBuffer);
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
