@@ -124,6 +124,7 @@
     <ClInclude Include="..\..\..\src\gfx\ICamera.h" />
     <ClInclude Include="..\..\..\src\gfx\stdafx.h" />
     <ClInclude Include="..\..\..\src\gfx\XMCamera.h" />
+    <ClInclude Include="..\..\..\src\shared\gfx\GraphicsJobInformation.h" />
     <ClInclude Include="..\..\..\src\shared\Notes.hpp" />
     <ClInclude Include="..\..\..\src\shared\gfx\GFXDefines.hpp" />
     <ClInclude Include="..\..\..\src\shared\gfx\GFXInterface.hpp" />

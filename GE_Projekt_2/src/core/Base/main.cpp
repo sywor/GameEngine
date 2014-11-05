@@ -46,6 +46,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
 
+	trr::stackAllocator.init( 1024 * 1024 );
+
 	/*trr::contentManager.InitContentLibs({"zlib128-dll.Spud","zlib128-dll.zip"});
 	trr::contentManager.GetResource("test/minigzip_d.exe.image");*/
 	trr::contentManager.InitContentLibs({"tImage.zip" });
@@ -75,6 +77,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			renderInterface->getCamera()->update();
 
 			prevTimeStamp = currTimeStamp;
+			trr::stackAllocator.clear();
 		}
 	}
 

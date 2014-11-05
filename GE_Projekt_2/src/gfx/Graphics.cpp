@@ -804,8 +804,6 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 void Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
-	if (g_vertexBuffer == nullptr)
-		g_vertexBuffer->Release();
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
@@ -833,4 +831,8 @@ void Graphics::setMesh(void* _data, int _nrOfTriangles)
 	//---------------------
 }
 
+void Graphics::AddRenderJob(GraphicsJobInfo* call)
+{
+	jobs.push_back( call );
+}
 

@@ -4,9 +4,11 @@
 #include "ICamera.h"
 #include "XMCamera.h"
 
+#include <vector>
+
 #define SafeRelease(x) if(x) x->Release() ; x = NULL;
 
-
+class GraphicsJobInfo;
 
 
 class Graphics
@@ -25,8 +27,6 @@ public:
 
 	Vertex wall[6];
 
-	ID3D11ShaderResourceView *texture = nullptr;
-
 	std::map<uint64_t, ID3D11ShaderResourceView*>	srvs;
 	std::map<uint64_t, ID3D11Buffer*>				buffers;
 
@@ -42,6 +42,8 @@ public:
 
 	//----------------------------------
 
+	void AddRenderJob(GraphicsJobInfo* call);
+
 private:
 
 	HRESULT InitDevice(HWND _hwnd);
@@ -49,7 +51,6 @@ private:
 
 	void createShader();
 	void createShader(std::string _shader, std::string _shaderModel);
-
 
 	void createInputLayout(ID3DBlob *_vertexBlob, ID3D11InputLayout* _layout);
 	void createSampler();
@@ -63,7 +64,12 @@ private:
 
 	cbWorld cbWorld;
 	ID3D11Buffer* g_cbWorld = NULL;
-	ID3D11Buffer* g_vertexBuffer;
+	//ID3D11Buffer* g_vertexBuffer;
+	//ID3D11ShaderResourceView *texture = nullptr;
+	std::vector< GraphicsJobInfo* > jobs;
+	std::vector< ID3D11Buffer* > vertexBuffers;
+	std::vector< ID3D11ShaderResourceView* > textures;
+
 
 	ID3D11RenderTargetView*  g_backBuffer = NULL;
 	ID3D11VertexShader* g_vertexShader = NULL;
