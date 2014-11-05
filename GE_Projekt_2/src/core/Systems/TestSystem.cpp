@@ -30,7 +30,7 @@ namespace trr
 			GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >( *it );
 			TransformationComponent* trc = entityHandler.GetData< TransformationComponent >(*it);
 
-
+			int o = 0;
 
 
 		}
