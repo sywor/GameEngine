@@ -13,6 +13,12 @@ namespace trr
 
 	void Level1::Init()
 	{
+		
+
+
+
+
+
 	}
 
 	void Level1::Unload()

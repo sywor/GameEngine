@@ -41,6 +41,12 @@ namespace trr
 			}			
 		}
 
+		std::vector< int >& GetVector()
+		{
+			return m_entites.GetVector();
+		}
+
+
 	private:
 		BinarySearchVector< int >		m_entites;
 		EntityMask						m_mask;

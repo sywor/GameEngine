@@ -135,6 +135,11 @@ namespace trr
 			data.insert( data.begin() + index, obj );
 		}
 
+		std::vector< T >& GetVector()
+		{
+			return data;
+		}
+
 	private:
 		std::vector< T > data;
 	};
