@@ -242,7 +242,7 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 		wall[i].normal	= VECTOR4(0, 0, 1, 1);
 		wall[i].texC	= VECTOR2(i, i);
 	}
-	const float size	= 5;
+	const float size	= 0;
 	const float depth	= 10.0f;
 	wall[0].pos = VECTOR4(1.0 * size,	1.0 * size,		depth, 1);
 	wall[1].pos = VECTOR4(1.0 * size,	1.0 * -size,	depth, 1);

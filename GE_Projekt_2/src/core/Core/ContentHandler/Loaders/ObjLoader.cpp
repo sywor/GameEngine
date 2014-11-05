@@ -1,34 +1,58 @@
 #include "ObjLoader.h"
 //#include <fstream>
-//#include "../shared/gfx/GFXInterface.hpp"
-//#include "../shared/RenderInterface.h"
-//
-//extern RenderInterface* renderInterface;
+
+#include "../shared/RenderInterface.h"
+#include "../gfx/stdafx.h"
+extern RenderInterface* renderInterface;
 namespace trr
 {
-
+	
 	void* ObjLoader::internal_Load(DataContainer in)
 	{
 		if (in.data == nullptr)
 			return nullptr;
 
-		while (true)
+		std::stringstream stream(in.data);
+		std::string line;
+		std::vector<VECTOR4> vertices;
+		std::vector<VECTOR2> uvs;
+		std::vector<int> indices;
+		std::vector<Vertex> vertexOut;
+
+		int ind = 0;
+		while (std::getline(stream, line))
 		{
-			char lineHeader[128];
-			int res = scanf(in.data, "%s", lineHeader);
+			std::string token;
+			std::stringstream linestream(line);
+			linestream >> token;
 
-			if (res == EOF)
-				break;
-
-			if (strcmp(lineHeader, "v") == 0)
+			if (token == "v")
 			{
+				float x, y, z;
+				linestream >> x >> y >> z;
+				vertices.push_back(VECTOR4(x, y, z, 1));
 
+				indices.push_back(ind);
+				ind++;
 			}
-			else if (strcmp(lineHeader, "vt") == 0)
+			else if (token == "vt")
 			{
-
+				float u, v;
+				linestream >> u >> v;
+				uvs.push_back(VECTOR2(u, v));
 			}
 		}
+
+		for (int i = 0; i < indices.size(); i++)
+		{
+			Vertex v;
+			v.normal = VECTOR4(1, 1, 1, 1);
+			v.pos = vertices[indices[i]];
+			v.texC = uvs[indices[i]];
+			vertexOut.push_back(v);
+		}
+
+		renderInterface->setMesh((void*)&vertexOut, vertexOut.size());
 
 		return nullptr;
 	}

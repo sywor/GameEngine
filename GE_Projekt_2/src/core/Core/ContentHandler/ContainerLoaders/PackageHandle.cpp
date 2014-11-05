@@ -16,7 +16,7 @@ DataContainer PackageHandle::ReadAsset(const std::string& _assetName)
 		return DataContainer(PackageResult::FILE_NOT_FOUND);
 
 	fs.open(packageName.c_str(), std::ifstream::binary);
-	char* result = allocator->allocate<char>(a->GetSize());
+	char* result = (char*)allocator->FlatAllocate(a->GetSize());
 
 	if (result == nullptr)
 		return DataContainer(PackageResult::OUT_OF_MEMORY);
@@ -47,7 +47,7 @@ std::vector<DataContainer> PackageHandle::ReadAllAssetsInDir(const std::string& 
 
 	for (it = amap.begin(); it != amap.end(); it++)
 	{
-		char* buffer = allocator->allocate<char>(it->second->GetSize());
+		char* buffer = (char*)allocator->FlatAllocate(it->second->GetSize());
 
 		if (buffer == nullptr)
 		{
