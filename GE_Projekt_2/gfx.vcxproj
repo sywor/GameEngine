@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{816E65FE-B9F4-E54A-8264-68D39F79AAF0}</ProjectGuid>
+    <ProjectGuid>{2E584FCD-B0C2-B142-97F2-55818B345EEC}</ProjectGuid>
     <RootNamespace>gfx</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -63,7 +63,8 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader></PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <ProgramDataBaseFileName>$(OutDir)gfx.pdb</ProgramDataBaseFileName>
@@ -90,10 +91,12 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader></PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DebugInformationFormat></DebugInformationFormat>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NOMINMAX;GENERATE_LUA_API_FILE;NDEBUG;RELEASE;GFX_DLL_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
