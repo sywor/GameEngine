@@ -45,7 +45,7 @@ struct Impls<First, Args...>
 {
 	static void UpdateSystemsTemplateRecursion( int* systemArray, float dt, float realTime )
 	{
-		static_cast<First*>(systemArray[sizeof...(Args)])->Update(dt, realTime);
+		reinterpret_cast<First*>(systemArray + (sizeof...(Args)-1) * 4)->Update(dt, realTime);
 
 		Impls< Args... >::UpdateSystemsTemplateRecursion( systemArray, dt, realTime );
 	}

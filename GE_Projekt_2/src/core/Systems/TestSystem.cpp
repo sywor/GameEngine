@@ -10,6 +10,7 @@ namespace trr
 
 	TestSystem::TestSystem()
 	{
+		this;
 		m_entityBucketID = systemHandler.RegisterBucket( 
 			entityHandler.GenerateMask< TransformationComponent, GraphicsComponent >());
 	}
@@ -21,6 +22,7 @@ namespace trr
 
 	void TestSystem::Update( float dt, float realtime )
 	{
+		this;
 		EntityBucket& localBucket = systemHandler.GetBucket( m_entityBucketID );
 		
 		std::vector< int >& entityIndicies = localBucket.GetVector();

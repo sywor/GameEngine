@@ -65,6 +65,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			QueryPerformanceCounter((LARGE_INTEGER*)&currTimeStamp);
 			float dt = (currTimeStamp - prevTimeStamp) * secsPerCnt;
 
+			// update
+			trr::systemHandler.Update( dt, dt );
+
 			//render
 			renderInterface->update(dt);
 			renderInterface->render(dt);
