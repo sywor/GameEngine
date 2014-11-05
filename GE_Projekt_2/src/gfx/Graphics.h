@@ -38,6 +38,8 @@ public:
 	ICamera* Cam;
 
 	void createTextureView(uint8_t *_data, int _sizeInBytes);
+	void setMesh(void* _data, int _nrOfTriangles);
+
 	//----------------------------------
 
 private:
