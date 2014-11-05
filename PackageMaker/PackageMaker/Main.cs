@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.IO.Compression;
 
 namespace PackageMaker
 {
@@ -69,9 +70,22 @@ namespace PackageMaker
             finalByteBuffer.AddRange(BitConverter.GetBytes(offset));
             finalByteBuffer.AddRange(byteBuffer);
 
-            using (FileStream fs = File.Create(folderPath + fileFormatName))
+            if(cb_compress.Checked)
             {
-                fs.Write(finalByteBuffer.ToArray(), 0, finalByteBuffer.Count);
+                using (FileStream fs = File.Create(folderPath + "_comp" + fileFormatName))
+                {
+                    using (GZipStream gz = new GZipStream(fs, CompressionMode.Compress, false))
+                    {
+                        gz.Write(finalByteBuffer.ToArray(), 0, finalByteBuffer.Count);
+                    }
+                }
+            }
+            else
+            {
+                using (FileStream fs = File.Create(folderPath + fileFormatName))
+                {
+                    fs.Write(finalByteBuffer.ToArray(), 0, finalByteBuffer.Count);
+                }
             }
         }
 
