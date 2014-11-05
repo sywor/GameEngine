@@ -9,8 +9,9 @@
 
 #include "../Memory/DefaultAllocator.h"
 #include <Core/ContentHandler/MurrMurr64.hpp>
-#include <Core/ContentHandler/ZipHandler.hpp>
-#include <Core/ContentHandler/DataContainer.hpp>
+#include <Core/ContentHandler/ContainerLoaders/ZipReader.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PotatoGun.hpp>
+#include <Core/ContentHandler/ContainerLoaders/PackageHandler.hpp>
 #include <Core/ContentHandler/CallbackContainer.hpp>
 #include <Core/ThreadPool/Threadpool.hpp>
 #include <logger/Logger.hpp>
@@ -45,16 +46,16 @@
 #define EXIT_CRITICAL_SECTION_ASSETLIST		mutex_assetList.unlock()
 #define ENTER_CRITICAL_SECTION_GENERAL		mutex_general.lock()
 #define EXIT_CRITICAL_SECTION_GENERAL		mutex_general.unlock()
-#define ENTER_CRITICAL_SECTION_ZLIB			mutex_zLib.lock()
-#define EXIT_CRITICAL_SECTION_ZLIB			mutex_zLib.unlock()
+#define ENTER_CRITICAL_SECTION_PACKAGES		mutex_packages.lock()
+#define EXIT_CRITICAL_SECTION_PACKAGES		mutex_packages.unlock()
 #endif
 #else
 #define ENTER_CRITICAL_SECTION_ASSETLIST
 #define EXIT_CRITICAL_SECTION_ASSETLIST
 #define ENTER_CRITICAL_SECTION_GENERAL
 #define EXIT_CRITICAL_SECTION_GENERAL
-#define ENTER_CRITICAL_SECTION_ZLIB
-#define EXIT_CRITICAL_SECTION_ZLIB
+#define ENTER_CRITICAL_SECTION_PACKAGES
+#define EXIT_CRITICAL_SECTION_PACKAGES
 #endif
 
 
@@ -112,27 +113,11 @@ namespace trr
 			void* data = nullptr;
 			if (loaders.find(ext) != loaders.end())
 			{
-				ENTER_CRITICAL_SECTION_ZLIB;
-				int zipId = contentZipFile.Find(fileName);
-				bool zipReadResult = false;
-				DataContainer rawData;
+				ENTER_CRITICAL_SECTION_PACKAGES;
+				DataContainer rawData = packagehandler->ReadAsset(fileName);
+				EXIT_CRITICAL_SECTION_PACKAGES;
 
-				if (zipId != -1)
-				{
-					int fileLength = contentZipFile.GetFileLen(zipId);
-					rawData = DataContainer(contentAllocator.allocate<char>(fileLength), fileLength);
-					if( rawData.data == nullptr )
-					{
-						data = CONTENT_CALLBACK_OUT_OF_MEMORY;
-					}
-					else
-					{
-						zipReadResult = contentZipFile.ReadFile(zipId, rawData.data);
-					}
-				}
-				EXIT_CRITICAL_SECTION_ZLIB;
-
-				if( zipReadResult )
+				if (rawData.err == PackageResult::PACKAGE_OK)
 				{
 					if( (data = loaders[ext]->Load( rawData )) == nullptr )
 					{
@@ -288,7 +273,7 @@ namespace trr
 		// ///////////////////////////////////////////////////////////////////////////////// 
 		// class utility
 		ResourceManager()
-			: contentAllocator(memoryBlockSize, sizeOfMemory )
+			: contentAllocator(memoryBlockSize, sizeOfMemory), packagehandler(contentAllocator.allocate<packageHandler>())
 		{
 
 			#ifdef USE_CRITICAL_SECTION_LOCK
@@ -317,15 +302,41 @@ namespace trr
 		{
 			workPool.KillThreads();
 		}
-		
-		/*
-		*/
-		bool InitContentLib(const std::wstring contentLib)
+
+		void InitContentLibs(std::initializer_list<std::string> _packages)
 		{
-			ENTER_CRITICAL_SECTION_GENERAL;
-			bool result = contentZipFile.Init(contentLib);
-			EXIT_CRITICAL_SECTION_GENERAL;
-			return result;
+			for each (std::string str in _packages)
+			{
+				int dotIndex = str.find_last_of('.');
+				std::string extention = str.substr(dotIndex + 1);
+				PackageResult pr;
+				if (extention == "Spud")
+				{
+					PotatoGun* pg = contentAllocator.allocate<PotatoGun>(&contentAllocator);
+					pr = pg->LoadPackage(str);
+
+					if (pr != PackageResult::PACKAGE_OK)
+					{
+						LOG_ERROR << PackageResultToString(pr) << std::endl;
+						continue;
+					}
+
+					packagehandler->AddHandle(pg);
+				}
+				else if (extention == "zip")
+				{
+					ZipReader* zr = contentAllocator.allocate<ZipReader>(&contentAllocator);
+					pr = zr->LoadPackage(str);
+
+					if (pr != PackageResult::PACKAGE_OK)
+					{
+						LOG_ERROR << PackageResultToString(pr) << std::endl;
+						continue;
+					}
+
+					packagehandler->AddHandle(zr);
+				}
+			}
 		}
 
 		void DumpAssetList()
@@ -545,11 +556,10 @@ namespace trr
 	private:
 		std::vector< CallbackContainer > callbackList;
 		std::map< std::uint64_t, Resource >	assetList;
-		std::map< const std::string, ResourceLoader* >	loaders;
-		
+		std::map< const std::string, ResourceLoader* >	loaders;	
 
 		PoolAllocator	contentAllocator;
-		ZipFile			contentZipFile;
+		packageHandler* packagehandler;
 		ThreadPool		workPool;
 
 		bool			inOutStalled;
@@ -565,7 +575,7 @@ namespace trr
 #else
 		std::mutex mutex_assetList;
 		std::mutex mutex_general;
-		std::mutex mutex_zLib;
+		std::mutex mutex_packages;
 #endif
 	};
 }

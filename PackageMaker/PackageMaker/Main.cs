@@ -17,7 +17,7 @@ namespace PackageMaker
         Queue<string> logBuffer = new Queue<string>(200);
         string folderPath = @"C:\temp\zlib128-dll";
         const int txbWidth = 100;
-        const string fileFormatName = ".sorryForPotato";
+        const string fileFormatName = ".Spud";
 
         public Main()
         {
@@ -133,60 +133,60 @@ namespace PackageMaker
             }
         }
 
-        private void print(string _title, string _body)
-        {            
-            int availableChars = txbWidth - (_title.Length + 2);
-            int bodyToRemove = _body.Length - availableChars;
-            List<char> bodyChArr = new List<char>();
-            string finalBody;
+        //private void print(string _title, string _body)
+        //{            
+        //    int availableChars = txbWidth - (_title.Length + 2);
+        //    int bodyToRemove = _body.Length - availableChars;
+        //    List<char> bodyChArr = new List<char>();
+        //    string finalBody;
 
-            if(bodyToRemove > 0)
-            {
-                bodyChArr.AddRange(_body.Reverse().Take(availableChars - 3));
-                bodyChArr.AddRange(new char[] {'.','.','.'});
-                bodyChArr.Reverse();
-                finalBody = new string(bodyChArr.ToArray());
-            }
-            else
-            {
-                finalBody = _body;
-            }
+        //    if(bodyToRemove > 0)
+        //    {
+        //        bodyChArr.AddRange(_body.Reverse().Take(availableChars - 3));
+        //        bodyChArr.AddRange(new char[] {'.','.','.'});
+        //        bodyChArr.Reverse();
+        //        finalBody = new string(bodyChArr.ToArray());
+        //    }
+        //    else
+        //    {
+        //        finalBody = _body;
+        //    }
 
-            string fullLogMessage = _title + ": " + finalBody;
+        //    string fullLogMessage = _title + ": " + finalBody;
 
-            if(logBuffer.Count < 200)
-            {
-                logBuffer.Enqueue(fullLogMessage);
-            }
-            else
-            {
-                logBuffer.Dequeue();
-                logBuffer.Enqueue(fullLogMessage);
-            }
+        //    if(logBuffer.Count < 200)
+        //    {
+        //        logBuffer.Enqueue(fullLogMessage);
+        //    }
+        //    else
+        //    {
+        //        logBuffer.Dequeue();
+        //        logBuffer.Enqueue(fullLogMessage);
+        //    }
             
-            StringBuilder sb = new StringBuilder();
+        //    StringBuilder sb = new StringBuilder();
 
-            foreach(string s in logBuffer)
-            {
-                sb.Append(s + "\n");
-            }
+        //    foreach(string s in logBuffer)
+        //    {
+        //        sb.Append(s + "\n");
+        //    }
 
-            if(txb_out.InvokeRequired)
-            {
-                txb_out.Invoke((MethodInvoker)delegate
-                {
-                    txb_out.Clear();
-                    txb_out.Text = sb.ToString();
-                    txb_out.ScrollToCaret();
-                });
-            }
-            else
-            {
-                txb_out.Clear();
-                txb_out.Text = sb.ToString();
-                txb_out.ScrollToCaret();
-            }
-        }
+        //    if(txb_out.InvokeRequired)
+        //    {
+        //        txb_out.Invoke((MethodInvoker)delegate
+        //        {
+        //            txb_out.Clear();
+        //            txb_out.Text = sb.ToString();
+        //            txb_out.ScrollToCaret();
+        //        });
+        //    }
+        //    else
+        //    {
+        //        txb_out.Clear();
+        //        txb_out.Text = sb.ToString();
+        //        txb_out.ScrollToCaret();
+        //    }
+        //}
 
         private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
         {

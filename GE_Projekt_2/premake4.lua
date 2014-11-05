@@ -52,7 +52,7 @@ solution "q_ge_project_2"
 		files { "src/gfx/**.hpp", "src/gfx/**.h", "src/gfx/**.cpp", "src/shared/**.cpp", "src/shared/**.hpp", "src/shared/**.h", "shaders/**.hlsl" }
 		includedirs { "src/gfx", "include", "src/shared", "$(IncludePath);$(DXSDK_DIR)Include;$(SolutionDir)include"}
 		defines { "GFX_DLL_EXPORT" }
-		links { "d3d11", "d3dcompiler", "dxguid", "winmm", "logger" }
+		links { "d3d11", "d3dcompiler", "dxguid", "winmm", "logger", "DirectXTex" }
 		
 		
 	project "logger"

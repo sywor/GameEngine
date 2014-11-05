@@ -11,11 +11,11 @@ namespace PackageMaker
         public static byte[] serializeString(string _str)
         {
             List<byte> res = new List<byte>();
-            Encoding utf8 = Encoding.UTF8;
-            UInt32 length = (UInt32)utf8.GetByteCount(_str);
+            Encoding ascii = Encoding.ASCII;
+            UInt32 length = (UInt32)ascii.GetByteCount(_str);
             res.AddRange(BitConverter.GetBytes(length));
             byte[] tmp = new byte[length];
-            utf8.GetBytes(_str, 0, _str.Length, tmp, tmp.GetLowerBound(0));
+            ascii.GetBytes(_str, 0, _str.Length, tmp, tmp.GetLowerBound(0));
             res.AddRange(tmp);
 
             return res.ToArray();

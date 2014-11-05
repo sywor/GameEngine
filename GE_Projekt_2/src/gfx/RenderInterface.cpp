@@ -15,4 +15,5 @@ RenderInterface::RenderInterface(HWND _hwnd)
 
 RenderInterface::~RenderInterface()
 {
+	SAFE_DELETE(graphics);
 }

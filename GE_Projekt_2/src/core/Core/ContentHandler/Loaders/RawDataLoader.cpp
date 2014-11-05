@@ -1,6 +1,9 @@
 #include "RawDataLoader.hpp"
 #include <fstream>
+#include "../shared/gfx/GFXInterface.hpp"
+#include "../shared/RenderInterface.h"
 
+extern RenderInterface* renderInterface;
 namespace trr
 {
 
@@ -9,18 +12,16 @@ namespace trr
 		if (in.data == nullptr)
 			return nullptr;
 
-		void* out = m_pAllocator->allocate<char>(in.size);
+		renderInterface->addTexture((uint8_t*)in.data, in.size);
 		
-		if (out == nullptr)
-			return nullptr;
-
-		return out;
+		return nullptr;
 	}
 
 	void RawDataLoader::internal_unload( void* data )
 	{
 		if (data)
 		{
+			//graphics unload
 			m_pAllocator->deallocate(data);
 			data = nullptr;
 		}

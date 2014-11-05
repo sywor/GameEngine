@@ -7,5 +7,6 @@ RenderInterface* Renderer::RenderAPI::createRenderer(HWND _hwnd)
 
 void Renderer::RenderAPI::deleteRenderer(RenderInterface* _renderer)
 {
-	_renderer->~RenderInterface();
+	SAFE_DELETE(_renderer);
+	//_renderer->~RenderInterface();
 }

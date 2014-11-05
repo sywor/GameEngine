@@ -18,7 +18,7 @@ namespace trr
 	{
 	public:
 		Resource(std::uint64_t _hash = -1)
-		: hash(_hash), nrReferences(0), data(nullptr), loaderExtension(nullptr), state(LOADING), path(nullptr)
+			: hash(_hash), nrReferences(0), data(nullptr), loaderExtension(nullptr), state(LOADING), path(nullptr), memSize(0)
 		{}
 
 	private:
@@ -39,6 +39,7 @@ namespace trr
 	protected:
 		std::uint64_t		hash;
 		unsigned int		nrReferences;
+		unsigned int		memSize;
 		RState				state;
 		void*				data;
 		char*				loaderExtension;
@@ -51,6 +52,7 @@ namespace trr
 		const std::uint64_t	getHash()		const { return hash; }
 		const RState		getState()		const { return state; }
 		const std::string	getPath()		const { return std::string( path ); }
+		const unsigned int	getSize()		const { return memSize; }
 	};
 }
 

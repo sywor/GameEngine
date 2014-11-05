@@ -14,7 +14,7 @@ namespace trr
 	protected:
 	public:
 
-		const std::string GetExtension() final { return "*"; }
+		const std::string GetExtension() final { return "image"; }
 	};
 }
 #endif
