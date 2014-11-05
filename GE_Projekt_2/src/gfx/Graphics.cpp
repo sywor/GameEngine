@@ -763,12 +763,7 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 int Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
-<<<<<<< HEAD
-	ID3D11Buffer* tempBuffer;
-=======
-	//if (g_vertexBuffer != nullptr)
-	//	SAFE_RELEASE(g_vertexBuffer);
->>>>>>> 9a2d95ad2a05c8c640f2a1116862267c1e4776be
+	ID3D11Buffer* tempBuffer = nullptr;
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));

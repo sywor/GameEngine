@@ -32,6 +32,11 @@ public:
 		return graphics->createTextureView(_data, _sizeInBytes);
 	}
 
+	virtual void AddRenderJob(GraphicsJobInfo* call)
+	{
+		graphics->AddRenderJob( call );
+	}
+
 	virtual void release(void* _iResource) {  }
 };
 

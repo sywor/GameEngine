@@ -5,12 +5,13 @@
 
 /* Include component header here */
 #include <Components/TransformationComponent.hpp>
+#include <Components/GraphicsComponent.hpp>
 
 	typedef trr::EntityHandler<
 	
 	/* List components here */
-	trr::TransformationComponent
-	
+	trr::TransformationComponent,
+	trr::GraphicsComponent
 	
 	> EntityHandlerImp;
 

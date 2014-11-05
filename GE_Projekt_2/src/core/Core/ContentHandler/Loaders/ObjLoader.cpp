@@ -3,6 +3,9 @@
 
 #include "../shared/RenderInterface.h"
 #include "../gfx/stdafx.h"
+#include <Core/ContentHandler/Containers/ObjMesh.hpp>
+extern std::mutex graphicMutex;
+
 extern RenderInterface* renderInterface;
 namespace trr
 {
@@ -52,9 +55,12 @@ namespace trr
 			vertexOut.push_back(v);
 		}
 
-		renderInterface->setMesh((void*)&vertexOut[0], vertexOut.size());
+		ObjMesh* mesh = (ObjMesh*)m_pAllocator->FlatAllocate(sizeof(ObjMesh));
+		graphicMutex.lock();
+		mesh->meshIndex = renderInterface->setMesh((void*)&vertexOut[0], vertexOut.size());
+		graphicMutex.unlock();
 
-		return nullptr;
+		return mesh;
 	}
 
 	void ObjLoader::internal_unload(void* data)

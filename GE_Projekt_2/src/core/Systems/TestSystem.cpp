@@ -6,6 +6,9 @@
 
 #include <gfx/GraphicsJobInformation.h>
 
+#include "../shared/RenderInterface.h"
+extern RenderInterface* renderInterface;
+
 namespace trr
 {
 
@@ -30,7 +33,7 @@ namespace trr
 		{
 			GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >( *it );
 			TransformationComponent* trc = entityHandler.GetData< TransformationComponent >(*it);
-			if ( grc->meshIndex != -1 || grc->textureIndex != -1 )
+			if ( grc->meshIndex != -1 && grc->textureIndex != -1 )
 			{
 				GraphicsJobInfo* info = stackAllocator.allocate<GraphicsJobInfo>();
 				if (info != nullptr)
@@ -40,6 +43,9 @@ namespace trr
 					info->scale = trc->scale;
 					std::memcpy(info->pos, trc->pos, 3 * sizeof(float));
 					std::memcpy(info->quaternion, trc->quat, 4 * sizeof(float));
+
+					renderInterface->AddRenderJob( info );
+
 				}
 			}
 		}

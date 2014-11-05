@@ -9,7 +9,7 @@
 
 #define SafeRelease(x) if(x) x->Release() ; x = NULL;
 
-class GraphicsJobInfo;
+struct GraphicsJobInfo;
 
 
 class Graphics

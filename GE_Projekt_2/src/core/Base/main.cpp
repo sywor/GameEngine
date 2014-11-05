@@ -8,6 +8,8 @@
 #include <Systems/TestSystem.hpp>
 #include <Core\ContentHandler\ResourceManager.hpp>
 
+#include <Base/Levels/Level1.hpp>
+
 //--------------------------------------------------------------------------------------
 // Forward declarations
 //--------------------------------------------------------------------------------------
@@ -17,6 +19,7 @@
 #include "..\gfx\DLLFactory.h"
 #include "..\gfx\Graphics.h"
 #include <tchar.h>
+#include <mutex>
 
 RenderInterface* renderInterface;
 
@@ -28,12 +31,14 @@ HRESULT				Update(float deltaTime);
 HINSTANCE				g_hInst = NULL;
 HWND					g_hWnd = NULL;
 
-
+std::mutex graphicMutex;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	if (FAILED(InitWindow(hInstance, nCmdShow)))
 		return 0;
+
+	LogSystem::InitializeLogFile( "outputLog.txt", false );
 
 	RegisterInputDevices(g_hWnd);
 
@@ -48,11 +53,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	trr::stackAllocator.init( 1024 * 1024 );
 
+	trr::contentManager.InitContentLibs({"test.Spud" });
+
+	trr::Level1 level;
+	level.Init();
+
 	/*trr::contentManager.InitContentLibs({"zlib128-dll.Spud","zlib128-dll.zip"});
 	trr::contentManager.GetResource("test/minigzip_d.exe.image");*/
-	trr::contentManager.InitContentLibs({"test.Spud" });
-	trr::contentManager.GetResource("smiley.bmp.image.image");
-	trr::contentManager.GetResource("wall.obj.mesh.mesh");
+	//trr::contentManager.InitContentLibs({"test.Spud" });
+	//trr::contentManager.GetResource("smiley.bmp.image.image");
+	//trr::contentManager.GetResource("wall.obj.mesh.mesh");
 	// Main message loop
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -72,8 +82,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			trr::systemHandler.Update( dt, dt );
 
 			//render
+			graphicMutex.lock();
 			renderInterface->update(dt);
 			renderInterface->render(dt);
+			graphicMutex.unlock();
 
 			renderInterface->getCamera()->update();
 
@@ -81,6 +93,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			trr::stackAllocator.clear();
 		}
 	}
+
+	LogSystem::CloseLogFile();
 
 	Renderer::RenderAPI::deleteRenderer(renderInterface);
 	return (int)msg.wParam;
