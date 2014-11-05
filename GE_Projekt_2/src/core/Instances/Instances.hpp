@@ -14,6 +14,7 @@ namespace trr
 	extern EntityHandlerImp		entityHandler;
 	extern SystemHandlerImpl	systemHandler;
 	extern ResourceManagerImpl	contentManager;
+	extern StackAllocator		stackAllocator;
 }
 
 #endif

@@ -6,6 +6,6 @@ namespace trr
 	EntityHandlerImp	entityHandler;
 	SystemHandlerImpl	systemHandler;
 	ResourceManagerImpl	contentManager;
-
+	StackAllocator		stackAllocator;
 
 }
