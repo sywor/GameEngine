@@ -216,7 +216,6 @@ void Graphics::createShader()
 
 Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 {
-	
 	Cam = _cam;
 
 	if (FAILED(InitDevice(_hwnd)))
@@ -225,7 +224,6 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	}
 
 	createBackBuffer();
-	//createShader();
 
 	createShader("VertexShader","vs_5_0");
 	createShader("PixelShader", "ps_5_0");
@@ -236,7 +234,6 @@ Graphics::Graphics(HWND _hwnd, ICamera* _cam)
 	createViewport();
 	createBlendState();
 }
-
 
 Graphics::~Graphics()
 {
@@ -766,7 +763,12 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 int Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
+<<<<<<< HEAD
 	ID3D11Buffer* tempBuffer;
+=======
+	//if (g_vertexBuffer != nullptr)
+	//	SAFE_RELEASE(g_vertexBuffer);
+>>>>>>> 9a2d95ad2a05c8c640f2a1116862267c1e4776be
 
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));

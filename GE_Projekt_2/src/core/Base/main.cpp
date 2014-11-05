@@ -50,8 +50,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	/*trr::contentManager.InitContentLibs({"zlib128-dll.Spud","zlib128-dll.zip"});
 	trr::contentManager.GetResource("test/minigzip_d.exe.image");*/
-	trr::contentManager.InitContentLibs({"tImage.zip" });
+	trr::contentManager.InitContentLibs({"test.Spud" });
 	trr::contentManager.GetResource("smiley.bmp.image.image");
+	trr::contentManager.GetResource("wall.obj.mesh.mesh");
 	// Main message loop
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)

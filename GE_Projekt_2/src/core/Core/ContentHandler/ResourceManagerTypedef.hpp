@@ -6,6 +6,7 @@
 /* Include headers for loaders here */
 #include <Core/ContentHandler/Loaders/TestLoader.hpp>
 #include <Core/ContentHandler/Loaders/RawDataLoader.hpp>
+#include <Core/ContentHandler/Loaders/ObjLoader.h>
 
 namespace trr
 {
@@ -21,7 +22,8 @@ namespace trr
 		1024 * 1024 * 10,
 
 		/* List loader classes here */
-
+		
+		ObjLoader,
 		TestLoader,
 		RawDataLoader		// raw char buffer
 
