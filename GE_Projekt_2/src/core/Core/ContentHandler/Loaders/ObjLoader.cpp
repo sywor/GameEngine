@@ -95,6 +95,9 @@ namespace trr
 		if (data)
 		{
 			//graphics unload
+			graphicMutex.lock();
+			renderInterface->releasteBuffer(reinterpret_cast<ObjMesh*>(data)->meshIndex);
+			graphicMutex.unlock();
 			m_pAllocator->deallocate(data);
 			data = nullptr;
 		}

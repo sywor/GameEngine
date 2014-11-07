@@ -16,9 +16,9 @@ extern RenderInterface* renderInterface;
 
 namespace trr
 {
-	void LoadAsset(Entity ent, std::string path)
+	void LoadAsset(Entity ent, std::string path, bool mesh)
 	{
-		trr::contentManager.GetResource(path, [ent](const void* data, std::uint64_t hash)
+		trr::contentManager.GetResource(path, [ent, mesh](const void* data, std::uint64_t hash)
 		{
 			if (trr::entityHandler.GetIndex(ent) < 0)
 			{
@@ -28,12 +28,26 @@ namespace trr
 			{
 				if (CONTENT_CHECK_VALID_DATA(data))
 				{
-					ObjMesh* mesh = (ObjMesh*)data;
-					GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >( ent );
-					if (grc != nullptr)
+					GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >(ent);
+					if (mesh)
+					{						
+						if (grc != nullptr)
+						{
+							ObjMesh* mesh = (ObjMesh*)data;
+							grc->meshIndex = mesh->meshIndex;
+							grc->meshHash = hash;
+							LOG_DEBUG << "loading succeeded!" << std::endl;
+						}
+					}
+					else
 					{
-						grc->meshIndex = mesh->meshIndex;
-						LOG_DEBUG << "loading succeeded!" << std::endl;
+						if (grc != nullptr)
+						{
+							TextureContainer* text = (TextureContainer*)data;
+							grc->textureIndex = text->textureIndex;
+							grc->textureHash = hash;
+							LOG_DEBUG << "loading succeeded!" << std::endl;
+						}
 					}
 				}
 				else
@@ -85,27 +99,39 @@ namespace trr
 				XMStoreFloat3(&temp2, XMVector3Length(XMLoadFloat3(&temp2)));
 				float distance = temp2.x;
 
-				if (distance < 20)
+				if (distance > 20)
 				{
-					if (grc->meshHash != 13164246829283744951)
+					// wall : 3245331227418423246
+					// smiley : 16130332233530715104
+					if (grc->meshHash != 3245331227418423246)
 					{
 						contentManager.Unload(grc->meshHash);
+						contentManager.Unload(grc->textureHash);
 						grc->meshHash = 0;
 						grc->meshIndex = -1;
-						LoadAsset(entityHandler.GetEntity(*it), "wall.obj.mesh.mesh");
-						LOG_DEBUG << "loading A" << std::endl;
+						grc->textureHash = 0;
+						grc->textureIndex = -1;
+
+						LoadAsset(entityHandler.GetEntity(*it), "wall.obj.mesh", true);
+						LoadAsset(entityHandler.GetEntity(*it), "smiley.bmp.image", false);
 					}
 				}
-				else if (distance > 20)
+				else
 				{
-					//if (grc->meshHash != 13164251329283744951)
-					//{
-					//	contentManager.Unload(grc->meshHash);
-					//	grc->meshHash = 0;
-					//	grc->meshIndex = -1;
-					//	//LoadAsset(entityHandler.GetEntity(*it), "wall.obj.mesh.mesh");
-					//	LOG_DEBUG << "loading B" << std::endl;
-					//}
+					// bunker : 14737407184233560585
+					// clown : 9273229865042457818
+					if (grc->meshHash != 14737407184233560585)
+					{
+						contentManager.Unload(grc->meshHash);
+						contentManager.Unload(grc->textureHash);
+						grc->meshHash = 0;
+						grc->meshIndex = -1;
+						grc->textureHash = 0;
+						grc->textureIndex = -1;
+						
+						LoadAsset(entityHandler.GetEntity(*it), "Bunker.obj.mesh", true );
+						LoadAsset(entityHandler.GetEntity(*it), "clown.jpg.image", false );
+					}
 				}
 			}
 

@@ -41,7 +41,23 @@ public:
 	//----------------------------------
 
 	void AddRenderJob(GraphicsJobInfo* call);
+	void releaseTexture(int index)
+	{
+		if (index >= 0 && index < textures.size())
+		{
+			SAFE_RELEASE(textures[index]);
+			SAFE_DELETE(textures[index]);
+		}
+	}
 
+	void releaseBuffer(int index)
+	{
+		if (index >= 0 && index < vertexBuffers.size())
+		{
+			SAFE_RELEASE(vertexBuffers[index].buffer);
+			SAFE_DELETE(vertexBuffers[index].buffer);
+		}
+	}
 private:
 
 	HRESULT InitDevice(HWND _hwnd);
@@ -92,5 +108,7 @@ private:
 	ID3D11RasterizerState *rasterState = NULL;
 
 	int nrOfTriangles;
+
+
 };
 

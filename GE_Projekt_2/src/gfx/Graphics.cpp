@@ -763,6 +763,7 @@ HRESULT Graphics::InitDevice(HWND _hwnd)
 
 int Graphics::setMesh(void* _data, int _nrOfTriangles)
 {
+
 	ID3D11Buffer* tempBuffer = nullptr;
 
 	D3D11_BUFFER_DESC bufferDesc;
@@ -783,7 +784,7 @@ int Graphics::setMesh(void* _data, int _nrOfTriangles)
 	ZeroMemory(&updateData, sizeof(updateData));
 
 	if (!FAILED(g_DeviceContext->Map(tempBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &updateData)))
-		memcpy(updateData.pData, _data, sizeof(Vertex)* 6);
+		memcpy(updateData.pData, _data, sizeof(Vertex)* _nrOfTriangles);
 
 	g_DeviceContext->Unmap(tempBuffer, 0);
 

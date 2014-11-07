@@ -37,6 +37,14 @@ public:
 		graphics->AddRenderJob( call );
 	}
 
-	virtual void release(void* _iResource) {  }
+	virtual void releaseTexture(int index)
+	{
+		graphics->releaseTexture(index);
+	}
+
+	virtual void releasteBuffer(int index)
+	{
+		graphics->releaseBuffer(index);
+	}
 };
 

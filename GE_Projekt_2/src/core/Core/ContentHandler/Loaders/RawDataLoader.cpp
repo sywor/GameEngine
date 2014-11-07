@@ -34,6 +34,9 @@ namespace trr
 		if (data)
 		{
 			//graphics unload
+			graphicMutex.lock();
+			renderInterface->releaseTexture(reinterpret_cast<TextureContainer*>(data)->textureIndex);
+			graphicMutex.unlock();
 			m_pAllocator->deallocate(data);
 			data = nullptr;
 		}
