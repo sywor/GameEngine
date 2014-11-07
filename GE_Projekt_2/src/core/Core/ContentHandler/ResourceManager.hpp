@@ -212,10 +212,10 @@ namespace trr
 			{
 				if( callbackList[ i ].hash == hash )
 				{
-					std::function< void( void* ) > func = callbackList[ i ].callback;
-					workPool.Enqueue( [ func, data ]()
+					std::function< void(void*, std::uint64_t hash) > func = callbackList[i].callback;
+					workPool.Enqueue( [ func, data, hash ]()
 					{
-						func( data );
+						func(data, hash);
 					});
 					callbackList.erase( callbackList.begin() + i );
 					i--;
@@ -388,14 +388,14 @@ namespace trr
 			Attempts to load asset and call the supplied function once loaded.
 			data-pointer is pointer of the result container associated with the sough loader.
 		*/
-		void GetResource(std::string path, std::function<void(const void* data)> callback)
+		void GetResource(std::string path, std::function<void(const void* data, std::uint64_t hash)> callback)
 		{
 			std::uint64_t hash = MakeHash( path.data(), path.size() );
 
 			ENTER_CRITICAL_SECTION_ASSETLIST;
 			if( callbackList.size() >= callbackListSizeLimit )
 			{
-				callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+				callback( CONTENT_CALLBACK_OUT_OF_MEMORY, hash );
 				EXIT_CRITICAL_SECTION_ASSETLIST;
 				return;
 			}
@@ -437,7 +437,7 @@ namespace trr
 				}
 				else
 				{
-					callback( CONTENT_CALLBACK_OUT_OF_MEMORY );
+					callback( CONTENT_CALLBACK_OUT_OF_MEMORY, hash );
 					EXIT_CRITICAL_SECTION_ASSETLIST;
 					return;
 				}
@@ -451,9 +451,9 @@ namespace trr
 			{
 				// add callback to queue
 				void* data = assetList[ hash ].data;
-				workPool.Enqueue( [ callback, data ]()
+				workPool.Enqueue( [ callback, data, hash ]()
 				{
-					callback( data );
+					callback( data, hash );
 				});
 			}
 			assetList[ hash ].nrReferences++;
@@ -582,22 +582,6 @@ namespace trr
 
 #endif
 
-
-// TO DO: Fix so path is check outside of zlib if path is not found in the zlib table. 
-//		  [ Under discussion and if time is available ]
-
-
-/* labb 2 requirements
-
-	v thread safe.
-	v hard limit memory usage.
-	- unload assets to free memory.
-	v dump list of currently loaded memory.
-	- test loaders
-	v guid
-	- stress scenario
-
-*/
 
 /* labb 3 
 	
