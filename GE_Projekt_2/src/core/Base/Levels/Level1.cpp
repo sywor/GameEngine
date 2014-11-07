@@ -25,7 +25,7 @@ namespace trr
 
 		//trr::contentManager.GetResource("smiley.bmp.image.image");
 		//trr::contentManager.GetResource("wall.obj.mesh.mesh");
-		trr::contentManager.GetResource( "wall.obj.mesh.mesh", [ e ]( const void* data )
+		trr::contentManager.GetResource( "wall.obj.mesh", [ e ]( const void* data )
 		{
 			if (trr::entityHandler.GetIndex(e) < 0)
 			{
@@ -54,7 +54,7 @@ namespace trr
 			}
 		});
 
-		trr::contentManager.GetResource("smiley.bmp.image.image", [e](const void* data)
+		trr::contentManager.GetResource("clown.jpg.image", [e](const void* data)
 		{
 			if (trr::entityHandler.GetIndex(e) < 0)
 			{

@@ -15,13 +15,18 @@ namespace trr
 		if (in.data == nullptr)
 			return nullptr;
 
+		struct Index
+		{
+			int v, uv, n;
+		};
 		std::stringstream stream(in.data);
 		std::string line;
 		std::vector<VECTOR4> vertices;
+		std::vector<VECTOR4> normals;
 		std::vector<VECTOR2> uvs;
-		std::vector<int> indices;
+		//std::vector<int> indices;
 		std::vector<Vertex> vertexOut;
-
+		std::vector<Index> indices;
 		int ind = 0;
 		while (std::getline(stream, line))
 		{
@@ -35,8 +40,8 @@ namespace trr
 				linestream >> x >> y >> z;
 				vertices.push_back(VECTOR4(x, y, z, 1));
 
-				indices.push_back(ind);
-				ind++;
+				//indices.push_back(ind);
+				//ind++;
 			}
 			else if (token == "vt")
 			{
@@ -44,14 +49,36 @@ namespace trr
 				linestream >> u >> v;
 				uvs.push_back(VECTOR2(u, v));
 			}
+			else if (token == "vn")
+			{
+				float x, y, z;
+				linestream >> x >> y >> z;
+				normals.push_back(VECTOR4(x, y, z, 0));
+			}
+			else if (token == "f")
+			{
+				Index index;
+				for (int i = 0; i < 3; ++i)
+				{
+					std::string faces;
+					linestream >> faces;
+					sscanf(faces.c_str(), "%i/%i/%i", &index.v, &index.uv, &index.n);
+					indices.push_back(index);
+				}
+			}
 		}
 
 		for (int i = 0; i < indices.size(); i++)
 		{
 			Vertex v;
-			v.normal = VECTOR4(1, 1, 1, 1);
-			v.pos = vertices[indices[i]];
-			v.texC = uvs[indices[i]];
+			int iv = indices[i].v;
+			int iuv = indices[i].uv;
+			int in = indices[i].n;
+
+			v.pos = vertices[iv-1];
+			v.texC = uvs[iuv-1];
+			v.normal = normals[in-1];
+
 			vertexOut.push_back(v);
 		}
 
