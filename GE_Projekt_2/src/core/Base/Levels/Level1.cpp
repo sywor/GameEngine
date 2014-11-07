@@ -22,10 +22,17 @@ namespace trr
 		trr::GraphicsComponent* grc = trr::entityHandler.AddComponent<trr::GraphicsComponent>(e);
 		grc->meshIndex = -1;
 		grc->textureIndex = -1;
+		grc->meshHash = 0;
+		grc->textureHash = 0;
+
+		trc->pos[0] = 0.0f;
+		trc->pos[1] = 0.0f;
+		trc->pos[2] = 10.0f;
 
 		//trr::contentManager.GetResource("smiley.bmp.image.image");
 		//trr::contentManager.GetResource("wall.obj.mesh.mesh");
-		trr::contentManager.GetResource( "wall.obj.mesh", [ e ]( const void* data )
+
+		trr::contentManager.GetResource("wall.obj.mesh", [e](const void* data, std::uint64_t hash)
 		{
 			if (trr::entityHandler.GetIndex(e) < 0)
 			{
@@ -39,12 +46,9 @@ namespace trr
 					GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >(e);
 					if (grc != nullptr)
 					{
+						grc->meshHash = hash;
 						grc->meshIndex = mesh->meshIndex;
 						LOG_DEBUG << "loading succeeded!" << std::endl;
-					}
-					else
-					{
-						LOG_DEBUG << "hej" << std::endl;
 					}
 				}
 				else
@@ -54,7 +58,7 @@ namespace trr
 			}
 		});
 
-		trr::contentManager.GetResource("clown.jpg.image", [e](const void* data)
+		trr::contentManager.GetResource("smiley.bmp.image", [e](const void* data, std::uint64_t hash)
 		{
 			if (trr::entityHandler.GetIndex(e) < 0)
 			{
@@ -68,12 +72,9 @@ namespace trr
 					GraphicsComponent* grc = entityHandler.GetData< GraphicsComponent >(e);
 					if (grc != nullptr)
 					{
+						grc->textureHash = hash;
 						grc->textureIndex = texture->textureIndex;
 						LOG_DEBUG << "loading succeeded!" << std::endl;
-					}
-					else
-					{
-						LOG_DEBUG << "hej" << std::endl;
 					}
 				}
 				else

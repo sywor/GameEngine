@@ -5,8 +5,8 @@
 #include <Base/Levels/Level1.hpp>
 #include <utility/HighresTimer.hpp>
 #include <logger/Logger.hpp>
-#include <Systems/TestSystem.hpp>
-#include <Core\ContentHandler\ResourceManager.hpp>
+#include <Systems/LoDSystem.hpp>
+#include <Core/ContentHandler/ResourceManager.hpp>
 
 #include <Base/Levels/Level1.hpp>
 

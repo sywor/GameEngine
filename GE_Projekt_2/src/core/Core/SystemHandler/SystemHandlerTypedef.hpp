@@ -4,7 +4,7 @@
 #include <Core/SystemHandler/SystemHandler.hpp>
 
 /* Include system headers here */
-#include <Systems/TestSystem.hpp>
+#include <Systems/LoDSystem.hpp>
 
 
 
@@ -13,7 +13,7 @@ namespace trr
 	typedef SystemHandler< 
 
 		/* List systems here */
-		TestSystem
+		LoDSystem
 
 
 	> SystemHandlerImpl;

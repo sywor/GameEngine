@@ -1,18 +1,18 @@
-#ifndef TRR_TESTSYSTEM_HPP
-#define TRR_TESTSYSTEM_HPP
+#ifndef TRR_LOD_SYSTEM_HPP
+#define TRR_LOD_SYSTEM_HPP
 
 #include <Core/SystemHandler/EntityBucket.hpp>
 
 namespace trr
 {
-	class TestSystem
+	class LoDSystem
 	{
 	private:
 
 	public:
-		TestSystem();
+		LoDSystem();
 
-		~TestSystem();
+		~LoDSystem();
 		
 		void Update( float deltaTime, float realTime );
 
